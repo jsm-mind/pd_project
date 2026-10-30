@@ -31,6 +31,8 @@ def generate_launch_description():
         DeclareLaunchArgument('x', default_value='4.5'),
         DeclareLaunchArgument('y', default_value='2.0'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
+        DeclareLaunchArgument('robot_model', default_value='fire_robot_unit1.urdf.xacro',
+                              description='Body xacro file in fire_robot_description/urdf'),
 
         # Gazebo server (+ GUI)
         IncludeLaunchDescription(
@@ -47,6 +49,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(description_dir, 'launch', 'description.launch.py')),
+            launch_arguments={'robot_model': LaunchConfiguration('robot_model')}.items(),
         ),
 
         Node(

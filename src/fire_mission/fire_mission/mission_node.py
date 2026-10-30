@@ -26,7 +26,6 @@ from tf2_ros import Buffer, TransformListener
 
 LOOP_PERIOD = 0.1          # [s]
 BEARING_FRESH = 0.3        # [s] a bearing older than this is stale
-SENSOR_X = 0.05            # [m] thermal camera and LiDAR are both 5 cm ahead of base_link
 RANGE_WINDOW = math.radians(2.0)  # a fire 0.3 m wide spans about +-2 deg at 4 m
 STATIC_MARGIN = 0.15       # [m] LiDAR hits this close to a mapped obstacle are not the fire
 COARSE_TOLERANCE = math.radians(10.0)
@@ -81,6 +80,9 @@ class Mission:
         self.started_pub = nav.create_publisher(Empty, '/patrol/started', latched)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, nav)
+        # Sensor (x, y) in base_link, read from the robot description's static TF in run()
+        self.thermal_xy = None
+        self.lidar_xy = None
 
         # PATROL progress
         self.wp_index = 0
@@ -133,6 +135,12 @@ class Mission:
         t, q = tf.transform.translation, tf.transform.rotation
         return t.x, t.y, math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
 
+    def sensor_origin(self, pose, xy):
+        """Map position of a sensor mounted at xy in base_link, for robot pose (x, y, yaw)."""
+        x, y, yaw = pose
+        c, s = math.cos(yaw), math.sin(yaw)
+        return x + xy[0] * c - xy[1] * s, y + xy[0] * s + xy[1] * c
+
     def is_static(self, x, y):
         """True if (x, y) in map is within STATIC_MARGIN of a mapped obstacle."""
         occupied, res, ox, oy = self.static_map
@@ -143,29 +151,35 @@ class Mission:
         return bool(occupied[max(r - k, 0):r + k + 1, max(c - k, 0):c + k + 1].any())
 
     def range_at(self, bearing):
-        """Closest LiDAR range within RANGE_WINDOW of bearing (rad, base frame), or None.
+        """Distance from the thermal camera to the closest LiDAR hit within RANGE_WINDOW of
+        bearing (rad, thermal camera frame), or None.
 
-        Beams hitting walls or furniture of the saved map are skipped: the fire is not in
-        the map, while a door frame next to the line of sight would give a short range.
+        The LiDAR and the camera may sit at different points, so each hit's bearing is
+        taken from the camera. Beams hitting walls or furniture of the saved map are
+        skipped: the fire is not in the map, while a door frame next to the line of sight
+        would give a short range.
         """
         s = self.scan
         pose = self.robot_pose()
         if s is None or pose is None:
             return None
-        x, y, yaw = pose
-        sx, sy = x + SENSOR_X * math.cos(yaw), y + SENSOR_X * math.sin(yaw)
+        yaw = pose[2]
+        cx, cy = self.sensor_origin(pose, self.thermal_xy)
+        lx, ly = self.sensor_origin(pose, self.lidar_xy)
         best = None
-        i0 = int(math.floor((bearing - RANGE_WINDOW - s.angle_min) / s.angle_increment))
-        i1 = int(math.ceil((bearing + RANGE_WINDOW - s.angle_min) / s.angle_increment))
-        for i in range(i0, i1 + 1):
-            r = s.ranges[i % len(s.ranges)]
-            if not s.range_min <= r <= s.range_max or (best is not None and r >= best):
+        for i, r in enumerate(s.ranges):
+            if not s.range_min <= r <= s.range_max:
                 continue
-            a = yaw + s.angle_min + (i % len(s.ranges)) * s.angle_increment
-            if self.static_map is not None and self.is_static(sx + r * math.cos(a),
-                                                              sy + r * math.sin(a)):
+            a = yaw + s.angle_min + i * s.angle_increment
+            hx, hy = lx + r * math.cos(a), ly + r * math.sin(a)
+            d = math.hypot(hx - cx, hy - cy)
+            if best is not None and d >= best:
                 continue
-            best = r
+            if abs(wrap(math.atan2(hy - cy, hx - cx) - yaw - bearing)) > RANGE_WINDOW:
+                continue
+            if self.static_map is not None and self.is_static(hx, hy):
+                continue
+            best = d
         return best
 
     def estimate_fire(self, bearing):
@@ -174,10 +188,10 @@ class Mission:
         r = self.range_at(bearing)
         if pose is None or r is None:
             return None
-        x, y, yaw = pose
-        sx, sy = x + SENSOR_X * math.cos(yaw), y + SENSOR_X * math.sin(yaw)
+        yaw = pose[2]
+        cx, cy = self.sensor_origin(pose, self.thermal_xy)
         dist = r + self.fire_radius
-        return sx + dist * math.cos(yaw + bearing), sy + dist * math.sin(yaw + bearing)
+        return cx + dist * math.cos(yaw + bearing), cy + dist * math.sin(yaw + bearing)
 
     def room_of(self, x, y):
         for name, (x0, y0, x1, y1) in zip(self.room_names, self.room_bounds):
@@ -350,9 +364,8 @@ class Mission:
         pose = self.robot_pose()
         if pose is None or self.fire is None:
             return None
-        sx = pose[0] + SENSOR_X * math.cos(pose[2])
-        sy = pose[1] + SENSOR_X * math.sin(pose[2])
-        return wrap(math.atan2(self.fire[1] - sy, self.fire[0] - sx) - pose[2])
+        cx, cy = self.sensor_origin(pose, self.thermal_xy)
+        return wrap(math.atan2(self.fire[1] - cy, self.fire[0] - cx) - pose[2])
 
     def step_align(self):
         if self.elapsed(self.state_time) > self.align_timeout:
@@ -388,10 +401,12 @@ class Mission:
             self.enter('SPRAY')
             return
         est = self.estimate_fire(b)
+        pose = self.robot_pose()
+        dist = None
         if est is not None:
             self.fire = est
-        r = self.range_at(b)
-        dist = None if r is None else r + self.fire_radius + SENSOR_X
+            if pose is not None:
+                dist = math.hypot(est[0] - pose[0], est[1] - pose[1])
         if dist is not None and self.min_distance <= dist <= self.max_distance:
             self.nav.info(f'Aligned: bearing {math.degrees(b):.1f} deg, distance {dist:.2f} m')
             self.enter('SPRAY')
@@ -472,10 +487,29 @@ class Mission:
         self.enter('PATROL')
 
     # ------------------------------------------------------------------ main
+    def wait_sensor_offsets(self):
+        """Read thermal camera and LiDAR positions in base_link (static TF from the robot
+        description), so the mission does not depend on where the body mounts them.
+        Both are assumed to face forward (yaw 0); the camera must be on the center line,
+        since ALIGN turns the body heading onto the camera bearing."""
+        while rclpy.ok():
+            try:
+                cam = self.tf_buffer.lookup_transform('base_link', 'thermal_link', Time())
+                lid = self.tf_buffer.lookup_transform('base_link', 'lidar_link', Time())
+            except Exception:
+                rclpy.spin_until_future_complete(self.nav, Future(), timeout_sec=LOOP_PERIOD)
+                continue
+            cam, lid = cam.transform.translation, lid.transform.translation
+            self.thermal_xy, self.lidar_xy = (cam.x, cam.y), (lid.x, lid.y)
+            self.nav.info(f'Sensors in base_link: thermal ({cam.x:.3f}, {cam.y:.3f}), '
+                          f'LiDAR ({lid.x:.3f}, {lid.y:.3f})')
+            return
+
     def run(self):
         # waitUntilNav2Active() would re-publish a (0, 0) initial pose; AMCL already has one.
         self.nav._waitForNodeToActivate('amcl')
         self.nav._waitForNodeToActivate('bt_navigator')
+        self.wait_sensor_offsets()
         self.started_pub.publish(Empty())
         self.nav.info(f'Patrol started: {len(self.waypoints)} waypoints')
         self.round_start = self.now()

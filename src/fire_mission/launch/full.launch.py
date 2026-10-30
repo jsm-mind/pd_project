@@ -46,9 +46,11 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument('min_delay', default_value='30.0'),
         DeclareLaunchArgument('max_delay', default_value='120.0'),
+        DeclareLaunchArgument('robot_model', default_value='fire_robot_unit1.urdf.xacro'),
 
         include('fire_robot_gazebo', 'sim.launch.py',
-                {'gui': LaunchConfiguration('gui'), 'spawn': 'false'}),
+                {'gui': LaunchConfiguration('gui'), 'spawn': 'false',
+                 'robot_model': LaunchConfiguration('robot_model')}),
         spawn,
         RegisterEventHandler(OnProcessExit(
             target_action=spawn,
