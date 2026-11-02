@@ -34,6 +34,8 @@ def spawn_fire(context):
                        '-x', str(x), '-y', str(y), '-z', str(z)],
             output='screen',
         ),
+        Node(package='home_world', executable='fire_alarm_sim.py',
+             parameters=[{'fire_spot': spot}], output='screen'),
     ]
 
 

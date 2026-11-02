@@ -8,7 +8,7 @@ echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/inst
 
 # ===== Run everything (one terminal) =====
 # Gazebo + robot + mode/fire+person detector/contact/guidance + Nav2/patrol/evacuation/suppression (after 15 s) + key window (xterm)
-# keys in the xterm window: p: patrol, c: return to charger, r: reset emergency, q: quit
+# keys in the xterm window: p: patrol, c: return to charger, a: ring fire alarm (room of the fire), r: reset emergency, q: quit
 fire                      # = ~/proj_ws/run.sh, random fire
 # fire tv_stand           # fire spot: stove_1 stove_2 tv_stand nightstand_bedroom1 nightstand_bedroom2 utility_room
 # fire build              # colcon build first, then run
@@ -23,6 +23,8 @@ ros2 topic echo /mode
 # ros2 topic pub -t 3 -r 2 /evacuation_request std_msgs/msg/String "{data: start}"   # M7: search resident -> guide to front door
 # ros2 topic pub -t 3 -r 2 /suppression_request std_msgs/msg/String "{data: start}"  # M8: go to fire, release aerosol (single-use per run)
 # ros2 topic echo /person_location      # resident position from thermal + lidar
+# ros2 topic pub --once -w 1 /fire_alarm_trigger std_msgs/msg/Empty "{}"      # M9: same as key 'a' (alarm in the fire's room rings)
+# ros2 topic echo --qos-durability transient_local /alarm_location   # alarm position received by the robot
 # ros2 topic pub --once -w 1 /contact_request std_msgs/msg/String "{data: call_119}"     # also: notify_fire ask_check notify_confirmed notify_done
 
 # ===== Optional: RViz (map, robot pose, path) =====

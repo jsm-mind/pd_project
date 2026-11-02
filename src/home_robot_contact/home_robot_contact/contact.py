@@ -2,8 +2,11 @@
 
 Input : /contact_request (std_msgs/String) - request names in MESSAGES or 'call_119'
         /fire_location   (PoseStamped, transient_local) - shown in messages
+        /alarm_location  (PoseStamped, transient_local) - shown when no fire location yet
         /mode, /mode_event - scenario 1 step 3: fire_detected in PATROL/CHARGING
-                             -> call_119 + notify_fire (moves to the scenario node in M10)
+                             -> call_119 + notify_fire
+                             scenario 2 step 2: fire_alarm in PATROL/CHARGING -> ask_check
+                             (move to the scenario node in M10)
 Output: Twilio call to call_number (or a log line when call_enabled is false),
         boxed messages on the terminal
 """
@@ -47,14 +50,19 @@ class Contact(Node):
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, 'contact_request', self.on_request, 10)
         self.create_subscription(PoseStamped, 'fire_location', self.on_location, latched)
+        self.create_subscription(PoseStamped, 'alarm_location', self.on_alarm, latched)
         self.create_subscription(String, 'mode', self.on_mode, latched)
         self.create_subscription(String, 'mode_event', self.on_event, 10)
         self.mode = None
         self.location = None
+        self.alarm = None
 
     # ---------- inputs ----------
     def on_location(self, msg):
         self.location = (msg.pose.position.x, msg.pose.position.y)
+
+    def on_alarm(self, msg):
+        self.alarm = (msg.pose.position.x, msg.pose.position.y)
 
     def on_mode(self, msg):
         self.mode = msg.data
@@ -63,6 +71,8 @@ class Contact(Node):
         if msg.data == 'fire_detected' and self.mode in ('PATROL', 'CHARGING'):
             self.dispatch('call_119')
             self.dispatch('notify_fire')
+        elif msg.data == 'fire_alarm' and self.mode in ('PATROL', 'CHARGING'):
+            self.dispatch('ask_check')
 
     def on_request(self, msg):
         self.dispatch(msg.data)
@@ -77,12 +87,17 @@ class Contact(Node):
 
     # ---------- outputs ----------
     def notify(self, text):
-        where = '-' if self.location is None else f'({self.location[0]:.1f}, {self.location[1]:.1f})'
+        if self.location is not None:
+            where = f'화재 위치(맵 좌표): ({self.location[0]:.1f}, {self.location[1]:.1f})'
+        elif self.alarm is not None:
+            where = f'경보 위치(맵 좌표): ({self.alarm[0]:.1f}, {self.alarm[1]:.1f})'
+        else:
+            where = '화재 위치(맵 좌표): -'
         lines = [
             '[보호자/거주자 연락]',
             f'시각: {datetime.now():%Y-%m-%d %H:%M:%S}',
             f'주소: {self.address}',
-            f'화재 위치(맵 좌표): {where}',
+            where,
             f'내용: {text}',
         ]
         bar = '=' * 60
