@@ -7,7 +7,7 @@ echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/inst
 # real call only with "fire call"; plain "fire" just logs the call
 
 # ===== Run everything (one terminal) =====
-# Gazebo + robot + mode/fire+person detector/contact/guidance + Nav2/patrol/evacuation (after 15 s) + key window (xterm)
+# Gazebo + robot + mode/fire+person detector/contact/guidance + Nav2/patrol/evacuation/suppression (after 15 s) + key window (xterm)
 # keys in the xterm window: p: patrol, c: return to charger, r: reset emergency, q: quit
 fire                      # = ~/proj_ws/run.sh, random fire
 # fire tv_stand           # fire spot: stove_1 stove_2 tv_stand nightstand_bedroom1 nightstand_bedroom2 utility_room
@@ -17,10 +17,11 @@ fire                      # = ~/proj_ws/run.sh, random fire
 
 # ===== Optional: watch topics / send test events =====
 ros2 topic echo /mode
-# ros2 topic echo /fire_location        # robot pose when fire was detected
+# ros2 topic echo /fire_location        # fire position (thermal bearing + lidar range)
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
-# ros2 topic pub --once -w 1 /evacuation_request std_msgs/msg/String "{data: start}"   # M7: search resident -> guide to front door
+# ros2 topic pub -t 3 -r 2 /evacuation_request std_msgs/msg/String "{data: start}"   # M7: search resident -> guide to front door
+# ros2 topic pub -t 3 -r 2 /suppression_request std_msgs/msg/String "{data: start}"  # M8: go to fire, release aerosol (single-use per run)
 # ros2 topic echo /person_location      # resident position from thermal + lidar
 # ros2 topic pub --once -w 1 /contact_request std_msgs/msg/String "{data: call_119}"     # also: notify_fire ask_check notify_confirmed notify_done
 
@@ -60,7 +61,7 @@ ros2 run home_robot_mode key_trigger
 # ===== Terminal 5: watch current mode / send test events =====
 cd ~/proj_ws && source install/setup.bash
 ros2 topic echo /mode
-# ros2 topic echo /fire_location        # robot pose when fire was detected
+# ros2 topic echo /fire_location        # fire position (thermal bearing + lidar range)
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
 

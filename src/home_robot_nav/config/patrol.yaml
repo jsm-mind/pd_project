@@ -29,3 +29,10 @@ evacuation:
     approach_dist: 1.0
     voice_period: 8.0
     guide_speed: 0.8           # [m/s] while leading the resident (search: full speed)
+
+suppression:
+  ros__parameters:
+    standoff: 0.3          # [m] from the estimated fire point (lidar hit on its front);
+                           # robot (r 0.22) edge stops ~0.08 m off the furniture
+    fire_out_delay: 5.0    # [s] after release, the fire model is removed
+    cloud_time: 20.0       # [s] aerosol cloud visual lifetime

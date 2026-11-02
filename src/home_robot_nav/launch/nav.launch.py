@@ -31,4 +31,11 @@ def generate_launch_description():
         parameters=[os.path.join(pkg, 'config', 'patrol.yaml')],
         output='screen',
     )
-    return LaunchDescription([bringup, patrol, evacuation])
+    suppression = Node(
+        package='home_robot_nav',
+        executable='suppression',
+        parameters=[os.path.join(pkg, 'config', 'patrol.yaml')],
+        output='screen',
+        emulate_tty=True,
+    )
+    return LaunchDescription([bringup, patrol, evacuation, suppression])
