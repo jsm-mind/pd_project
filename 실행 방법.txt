@@ -1,3 +1,32 @@
+# ===== (once) shortcut: type "fire" anywhere; also sources proj_ws in new terminals =====
+echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/install/setup.bash" >> ~/.bashrc && source ~/.bashrc
+
+# ===== Run everything (one terminal) =====
+# Gazebo + robot + mode/fire detector + Nav2/patrol (after 15 s) + key window (xterm)
+# keys in the xterm window: p: patrol, c: return to charger, r: reset emergency, q: quit
+fire                      # = ~/proj_ws/run.sh, random fire
+# fire tv_stand           # fire spot: stove_1 stove_2 tv_stand nightstand_bedroom1 nightstand_bedroom2 utility_room
+# fire build              # colcon build first, then run
+# fire build tv_stand
+
+# ===== Optional: watch topics / send test events =====
+ros2 topic echo /mode
+# ros2 topic echo /fire_location        # robot pose when fire was detected
+# ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
+# ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
+
+# ===== Optional: RViz (map, robot pose, path) =====
+ros2 launch nav2_bringup rviz_launch.py
+
+# ===== Optional: manual drive (do not use while patrolling) =====
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+# ===== Tool: regenerate the pre-built map after world changes =====
+cd ~/proj_ws && python3 src/home_robot_nav/tools/make_map.py src/home_world/worlds/house.sdf src/home_robot_nav/maps && colcon build --packages-select home_robot_nav
+
+# ======================================================================
+# Reference: run each part in its own terminal (same as "fire" above)
+# ======================================================================
 # ===== Build (once after code changes) =====
 cd ~/proj_ws && colcon build && source install/setup.bash
 
@@ -25,13 +54,3 @@ ros2 topic echo /mode
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
 
-# ===== Optional: RViz (map, robot pose, path) =====
-cd ~/proj_ws && source install/setup.bash
-ros2 launch nav2_bringup rviz_launch.py
-
-# ===== Optional: manual drive (do not use while patrolling) =====
-cd ~/proj_ws && source install/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
-
-# ===== Tool: regenerate the pre-built map after world changes =====
-cd ~/proj_ws && python3 src/home_robot_nav/tools/make_map.py src/home_world/worlds/house.sdf src/home_robot_nav/maps && colcon build --packages-select home_robot_nav
