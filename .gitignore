@@ -21,3 +21,6 @@ legacy/build/
 legacy/install/
 legacy/log/
 legacy/unused/
+
+# Twilio credentials (119 call)
+twilio.yaml

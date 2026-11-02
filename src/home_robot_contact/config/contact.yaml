@@ -1,0 +1,11 @@
+contact:
+  ros__parameters:
+    # Placeholder values: replace before the demo
+    address: "OO시 OO동 OO번지 단독주택"
+    call_number: "+821000000000"   # designated number standing in for 119 (E.164); real one in twilio.yaml
+    # Twilio credentials go in ~/proj_ws/twilio.yaml (git-ignored), same node name:
+    #   contact:
+    #     ros__parameters:
+    #       twilio_sid: "AC..."
+    #       twilio_token: "..."
+    #       twilio_from: "+1..."

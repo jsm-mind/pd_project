@@ -1,4 +1,4 @@
-"""Everything in one launch: Gazebo + robot, mode manager + fire detector,
+"""Everything in one launch: Gazebo + robot, mode manager + fire detector, contact,
 Nav2 + patrol (delayed until Gazebo is up), and a key window (xterm)."""
 import os
 
@@ -23,9 +23,11 @@ def include(pkg, name, args=None):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('fire_spot', default_value='random'),
+        DeclareLaunchArgument('call', default_value='false'),
         include('home_robot_description', 'sim.launch.py',
                 {'fire_spot': LaunchConfiguration('fire_spot')}),
         include('home_robot_mode', 'mode.launch.py'),
+        include('home_robot_contact', 'contact.launch.py', {'call': LaunchConfiguration('call')}),
         TimerAction(period=NAV_DELAY, actions=[include('home_robot_nav', 'nav.launch.py')]),
         Node(
             package='home_robot_mode',
