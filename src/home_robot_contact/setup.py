@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'contact = home_robot_contact.contact:main',
+            'guidance = home_robot_contact.guidance:main',
         ],
     },
 )

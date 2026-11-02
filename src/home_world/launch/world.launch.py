@@ -55,4 +55,5 @@ def generate_launch_description():
                                models + os.pathsep + os.environ.get('GZ_SIM_RESOURCE_PATH', '')),
         gz_sim,
         OpaqueFunction(function=spawn_fire),
+        Node(package='home_world', executable='resident_sim.py', output='screen'),
     ])

@@ -22,4 +22,5 @@ def generate_launch_description():
                               description='true: really dial call_number'),
         Node(package='home_robot_contact', executable='contact',
              parameters=params, output='screen', emulate_tty=True),
+        Node(package='home_robot_contact', executable='guidance', output='screen', emulate_tty=True),
     ])

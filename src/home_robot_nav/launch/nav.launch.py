@@ -25,4 +25,10 @@ def generate_launch_description():
         parameters=[os.path.join(pkg, 'config', 'patrol.yaml')],
         output='screen',
     )
-    return LaunchDescription([bringup, patrol])
+    evacuation = Node(
+        package='home_robot_nav',
+        executable='evacuation',
+        parameters=[os.path.join(pkg, 'config', 'patrol.yaml')],
+        output='screen',
+    )
+    return LaunchDescription([bringup, patrol, evacuation])

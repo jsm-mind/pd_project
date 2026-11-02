@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- FollowActor target for the resident actor; moved by resident_sim.
+     No visual or collision, so it never blocks the robot. -->
+<sdf version="1.9">
+  <model name="resident_anchor">
+    <static>true</static>
+    <link name="link"/>
+  </model>
+</sdf>

@@ -15,6 +15,7 @@
   <exec_depend>nav2_msgs</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
   <exec_depend>home_robot_description</exec_depend>
   <exec_depend>home_robot_mode</exec_depend>
   <exec_depend>home_robot_contact</exec_depend>

@@ -10,20 +10,13 @@
       <scale>1.0</scale>
       <interpolate_x>true</interpolate_x>
     </animation>
-    <script>
-     <loop>true</loop>
-     <delay_start>0.000000</delay_start>
-     <auto_start>true</auto_start>
-     <trajectory id="0" type="walking">
-         <waypoint>
-             <time>0</time>
-             <pose>0 1 0 0 0 0</pose>
-         </waypoint>
-         <waypoint>
-             <time>1.125000</time>
-             <pose>0 1 0 0 0 0</pose>
-         </waypoint>
-     </trajectory>
-    </script>
+    <!-- Walks to resident_anchor (moved by resident_sim) -->
+    <plugin filename="gz-sim-follow-actor-system" name="gz::sim::systems::FollowActor">
+      <target>resident_anchor</target>
+      <min_distance>0.3</min_distance>
+      <max_distance>100</max_distance>
+      <velocity>1.0</velocity>
+      <animation>walking</animation>
+    </plugin>
   </actor>
 </sdf>

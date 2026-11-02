@@ -863,9 +863,21 @@
     <include>
       <name>resident</name>
       <uri>model://male_visitor</uri>
-      <!-- Actor script waypoint adds (0, 1, 0): actual position is (8.1, 6.4).
-           z = floor 0.1 + hip bone height 0.9 (actor pose is the root bone). -->
-      <pose>8.1 5.4 1.0 0 0 0</pose>
+      <!-- z = floor: without a script trajectory (FollowActor) the walking
+           animation already lifts the root bone to hip height -->
+      <pose>8.1 6.4 0.1 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>resident_body</name>
+      <uri>model://resident_body</uri>
+      <pose>8.1 6.4 0.1 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>resident_anchor</name>
+      <uri>model://resident_anchor</uri>
+      <pose>8.1 6.4 0.1 0 0 0</pose>
     </include>
 
   </world>

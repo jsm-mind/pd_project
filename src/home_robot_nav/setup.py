@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'patrol = home_robot_nav.patrol:main',
+            'evacuation = home_robot_nav.evacuation:main',
         ],
     },
 )

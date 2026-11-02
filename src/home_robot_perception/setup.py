@@ -19,6 +19,7 @@ setup(
     entry_points={
         'console_scripts': [
             'fire_detector = home_robot_perception.fire_detector:main',
+            'person_detector = home_robot_perception.person_detector:main',
         ],
     },
 )
