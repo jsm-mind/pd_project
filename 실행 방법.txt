@@ -6,7 +6,7 @@ cd ~/proj_ws && source install/setup.bash
 ros2 launch home_robot_description sim.launch.py            # random fire
 # ros2 launch home_robot_description sim.launch.py fire_spot:=tv_stand
 
-# ===== Terminal 2: mode manager =====
+# ===== Terminal 2: mode manager + fire detector (thermal >= 80 C -> EMERGENCY) =====
 cd ~/proj_ws && source install/setup.bash
 ros2 launch home_robot_mode mode.launch.py
 
@@ -21,6 +21,7 @@ ros2 run home_robot_mode key_trigger
 # ===== Terminal 5: watch current mode / send test events =====
 cd ~/proj_ws && source install/setup.bash
 ros2 topic echo /mode
+# ros2 topic echo /fire_location        # robot pose when fire was detected
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
 # ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
 
