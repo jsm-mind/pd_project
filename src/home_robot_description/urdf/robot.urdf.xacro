@@ -1,0 +1,308 @@
+<?xml version="1.0"?>
+<!-- Unit-1 home fire response robot: small cylindrical body on two tri-star wheel sets. -->
+<robot name="home_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Body -->
+  <xacro:property name="body_r" value="0.17"/>
+  <xacro:property name="body_h" value="0.26"/>
+  <xacro:property name="body_z0" value="0.06"/>   <!-- ground clearance -->
+  <xacro:property name="body_mass" value="4.0"/>
+
+  <!-- Tri-star: frame fixed to body, 3 small wheels at 120 deg; bottom two touch the floor -->
+  <xacro:property name="wheel_r" value="0.035"/>
+  <xacro:property name="wheel_w" value="0.025"/>
+  <xacro:property name="wheel_mass" value="0.15"/>
+  <xacro:property name="arm" value="0.065"/>
+  <xacro:property name="hub_z" value="${wheel_r + arm * 0.5}"/>
+  <xacro:property name="hub_y" value="0.20"/>
+
+  <xacro:property name="PI" value="3.14159265"/>
+
+  <xacro:macro name="cyl_inertia" params="m r h">
+    <inertia ixx="${m * (3 * r * r + h * h) / 12}" ixy="0" ixz="0"
+             iyy="${m * (3 * r * r + h * h) / 12}" iyz="0" izz="${m * r * r / 2}"/>
+  </xacro:macro>
+
+  <material name="body_white"><color rgba="0.92 0.92 0.90 1"/></material>
+  <material name="dark"><color rgba="0.15 0.15 0.15 1"/></material>
+  <material name="red"><color rgba="0.85 0.12 0.10 1"/></material>
+  <material name="orange"><color rgba="0.95 0.55 0.10 1"/></material>
+  <material name="blue"><color rgba="0.10 0.45 0.90 1"/></material>
+  <material name="glass"><color rgba="0.05 0.05 0.08 1"/></material>
+
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry><cylinder radius="${body_r}" length="${body_h}"/></geometry>
+      <material name="body_white"/>
+    </visual>
+    <!-- red band -->
+    <visual>
+      <origin xyz="0 0 ${body_h / 2 - 0.03}"/>
+      <geometry><cylinder radius="${body_r + 0.002}" length="0.02"/></geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="${body_r}" length="${body_h}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="${body_mass}"/>
+      <xacro:cyl_inertia m="${body_mass}" r="${body_r}" h="${body_h}"/>
+    </inertial>
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${body_z0 + body_h / 2}"/>
+  </joint>
+
+  <!-- ===== Tri-star wheel sets ===== -->
+  <xacro:macro name="tristar" params="side y">
+    <link name="${side}_tristar_frame">
+      <!-- three arms -->
+      <xacro:macro name="arm_visual" params="ang">
+        <visual>
+          <origin xyz="${arm / 2 * cos(ang)} 0 ${arm / 2 * sin(ang)}" rpy="0 ${-ang} 0"/>
+          <geometry><box size="${arm} 0.012 0.025"/></geometry>
+          <material name="dark"/>
+        </visual>
+      </xacro:macro>
+      <xacro:arm_visual ang="${PI / 2}"/>
+      <xacro:arm_visual ang="${-PI / 6}"/>
+      <xacro:arm_visual ang="${-5 * PI / 6}"/>
+      <visual>
+        <origin rpy="${PI / 2} 0 0"/>
+        <geometry><cylinder radius="0.018" length="0.016"/></geometry>
+        <material name="red"/>
+      </visual>
+      <inertial>
+        <mass value="0.2"/>
+        <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
+      </inertial>
+    </link>
+    <joint name="${side}_tristar_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${side}_tristar_frame"/>
+      <origin xyz="0 ${y * (hub_y - 0.02)} ${hub_z - body_z0 - body_h / 2}"/>
+    </joint>
+
+    <xacro:macro name="tristar_wheel" params="pos ang">
+      <link name="${side}_${pos}_wheel">
+        <visual>
+          <origin rpy="${PI / 2} 0 0"/>
+          <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+          <material name="dark"/>
+        </visual>
+        <!-- hub cap so wheel rotation is visible -->
+        <visual>
+          <origin xyz="0.012 ${y * wheel_w / 2} 0" rpy="${PI / 2} 0 0"/>
+          <geometry><cylinder radius="0.008" length="0.004"/></geometry>
+          <material name="orange"/>
+        </visual>
+        <collision>
+          <origin rpy="${PI / 2} 0 0"/>
+          <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+        </collision>
+        <inertial>
+          <mass value="${wheel_mass}"/>
+          <inertia ixx="${wheel_mass * (3 * wheel_r * wheel_r + wheel_w * wheel_w) / 12}" ixy="0" ixz="0"
+                   iyy="${wheel_mass * wheel_r * wheel_r / 2}" iyz="0"
+                   izz="${wheel_mass * (3 * wheel_r * wheel_r + wheel_w * wheel_w) / 12}"/>
+        </inertial>
+      </link>
+      <joint name="${side}_${pos}_wheel_joint" type="continuous">
+        <parent link="${side}_tristar_frame"/>
+        <child link="${side}_${pos}_wheel"/>
+        <origin xyz="${arm * cos(ang)} ${y * 0.02} ${arm * sin(ang)}"/>
+        <axis xyz="0 1 0"/>
+      </joint>
+      <gazebo reference="${side}_${pos}_wheel">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+      </gazebo>
+    </xacro:macro>
+
+    <xacro:tristar_wheel pos="top" ang="${PI / 2}"/>
+    <xacro:tristar_wheel pos="front" ang="${-PI / 6}"/>
+    <xacro:tristar_wheel pos="rear" ang="${-5 * PI / 6}"/>
+  </xacro:macro>
+
+  <xacro:tristar side="left" y="1"/>
+  <xacro:tristar side="right" y="-1"/>
+
+  <!-- ===== Towel storage (rear, with lid) ===== -->
+  <link name="storage_link">
+    <visual>
+      <geometry><box size="0.06 0.20 0.14"/></geometry>
+      <material name="orange"/>
+    </visual>
+    <visual>
+      <origin xyz="0.0 0 0.075"/>
+      <geometry><box size="0.07 0.21 0.012"/></geometry>
+      <material name="dark"/>
+    </visual>
+  </link>
+  <joint name="storage_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="storage_link"/>
+    <origin xyz="${-body_r + 0.01} 0 0.0"/>
+  </joint>
+
+  <!-- ===== Solid aerosol unit (single-use, electrically ignited) =====
+       Generator canister sits inside the body; outlet grille on the top front.
+       No aiming: it floods the room. Kept below the lidar scan plane. -->
+  <link name="aerosol_outlet_body">
+    <visual>
+      <geometry><cylinder radius="0.045" length="0.012"/></geometry>
+      <material name="red"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.0065"/>
+      <geometry><cylinder radius="0.032" length="0.002"/></geometry>
+      <material name="dark"/>
+    </visual>
+  </link>
+  <joint name="aerosol_outlet_body_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="aerosol_outlet_body"/>
+    <origin xyz="0.10 0 ${body_h / 2 + 0.006}"/>
+  </joint>
+  <!-- emission frame, +z up -->
+  <link name="aerosol_outlet_link"/>
+  <joint name="aerosol_outlet_joint" type="fixed">
+    <parent link="aerosol_outlet_body"/>
+    <child link="aerosol_outlet_link"/>
+    <origin xyz="0 0 0.008"/>
+  </joint>
+
+  <!-- ===== Floor arrow beam projector (front low, points down-forward) ===== -->
+  <link name="projector_body">
+    <visual>
+      <geometry><box size="0.04 0.06 0.04"/></geometry>
+      <material name="dark"/>
+    </visual>
+    <visual>
+      <origin xyz="0.021 0 0" rpy="0 ${PI / 2} 0"/>
+      <geometry><cylinder radius="0.012" length="0.004"/></geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+  <joint name="projector_body_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="projector_body"/>
+    <origin xyz="${body_r} 0 ${-body_h / 2 + 0.05}" rpy="0 0.6 0"/>
+  </joint>
+  <link name="projector_link"/>
+  <joint name="projector_joint" type="fixed">
+    <parent link="projector_body"/>
+    <child link="projector_link"/>
+    <origin xyz="0.023 0 0"/>
+  </joint>
+
+  <!-- ===== Sensors ===== -->
+  <!-- 2D lidar (RPLIDAR A1 class) on top -->
+  <link name="lidar_link">
+    <visual>
+      <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+      <material name="dark"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="0.035" length="0.04"/></geometry>
+    </collision>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 ${body_h / 2 + 0.02}"/>
+  </joint>
+
+  <!-- 32x24 thermal array (MLX90640, 55x35 deg) on front face, tilted 10 deg up -->
+  <link name="thermal_link">
+    <visual>
+      <origin xyz="0.005 0 0"/>
+      <geometry><box size="0.02 0.04 0.03"/></geometry>
+      <material name="glass"/>
+    </visual>
+  </link>
+  <joint name="thermal_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="thermal_link"/>
+    <origin xyz="${body_r - 0.005} 0 ${body_h / 2 - 0.07}" rpy="0 -0.17 0"/>
+  </joint>
+  <link name="thermal_optical_link"/>
+  <joint name="thermal_optical_joint" type="fixed">
+    <parent link="thermal_link"/>
+    <child link="thermal_optical_link"/>
+    <origin rpy="${-PI / 2} 0 ${-PI / 2}"/>
+  </joint>
+
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <topic>scan</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <update_rate>5</update_rate>
+      <always_on>true</always_on>
+      <lidar>
+        <scan>
+          <horizontal><samples>360</samples><resolution>1</resolution>
+            <min_angle>-3.14159</min_angle><max_angle>3.14159</max_angle></horizontal>
+          <vertical><samples>1</samples><resolution>1</resolution><min_angle>0</min_angle><max_angle>0</max_angle></vertical>
+        </scan>
+        <range><min>0.15</min><max>12.0</max><resolution>0.01</resolution></range>
+        <noise><type>gaussian</type><mean>0</mean><stddev>0.01</stddev></noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+  <!-- Rendered at 160x96 and block-averaged (5x4) to 32x24 by thermal_sensor.py,
+       because a thermal camera samples only pixel centers.
+       Gazebo pixels are square, so 160x96 gives 55 x 34.7 deg (spec 55 x 35). -->
+  <gazebo reference="thermal_link">
+    <sensor name="thermal" type="thermal">
+      <topic>thermal/image_full</topic>
+      <gz_frame_id>thermal_optical_link</gz_frame_id>
+      <update_rate>8</update_rate>
+      <always_on>true</always_on>
+      <camera>
+        <horizontal_fov>0.9599</horizontal_fov>
+        <image><width>160</width><height>96</height><format>L16</format></image>
+        <clip><near>0.05</near><far>20</far></clip>
+      </camera>
+      <plugin filename="gz-sim-thermal-sensor-system" name="gz::sim::systems::ThermalSensor">
+        <min_temp>253.15</min_temp>
+        <max_temp>1273.15</max_temp>
+        <resolution>0.1</resolution>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ===== Gazebo systems ===== -->
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_front_wheel_joint</left_joint>
+      <left_joint>left_rear_wheel_joint</left_joint>
+      <left_joint>left_top_wheel_joint</left_joint>
+      <right_joint>right_front_wheel_joint</right_joint>
+      <right_joint>right_rear_wheel_joint</right_joint>
+      <right_joint>right_top_wheel_joint</right_joint>
+      <!-- effective track for skid steering (measured: true/odom yaw = 0.925 at 0.40 m) -->
+      <wheel_separation>0.43</wheel_separation>
+      <wheel_radius>${wheel_r}</wheel_radius>
+      <max_linear_acceleration>1.0</max_linear_acceleration>
+      <max_angular_acceleration>3.0</max_angular_acceleration>
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+      <update_rate>30</update_rate>
+    </plugin>
+  </gazebo>
+
+</robot>

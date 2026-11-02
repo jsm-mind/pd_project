@@ -1,0 +1,9 @@
+실행 방법
+ros2 topic echo /fire_detection/bearing # 방위각 확인
+ros2 topic echo /fire_sim/hp # HP 확인
+ros2 topic pub -r 5 /spray/active std_msgs/msg/Bool "{data: true}" # 분사
+
+ros2 launch fire_mission full.launch.py rviz:=true      # RViz도 함께
+
+cd ~/proj_ws && colcon build --symlink-install && source install/setup.bash
+ros2 launch fire_mission normal.launch.py

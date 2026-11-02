@@ -1,9 +1,36 @@
-실행 방법
-ros2 launch fire_robot_gazebo sim.launch.py # 터미널 1
-ros2 launch fire_sim fire_sim.launch.py min_delay:=3.0 max_delay:=5.0 # 터미널 2
-ros2 launch fire_detection fire_detection.launch.py # 터미널 3
-ros2 topic echo /fire_detection/bearing # 방위각 확인
-ros2 topic echo /fire_sim/hp # HP 확인
-ros2 topic pub -r 5 /spray/active std_msgs/msg/Bool "{data: true}" # 분사
+# ===== Build (once after code changes) =====
+cd ~/proj_ws && colcon build && source install/setup.bash
 
-ros2 launch fire_robot_navigation navigation.launch.py # rviz
+# ===== Terminal 1: Gazebo world + robot =====
+cd ~/proj_ws && source install/setup.bash
+ros2 launch home_robot_description sim.launch.py            # random fire
+# ros2 launch home_robot_description sim.launch.py fire_spot:=tv_stand
+
+# ===== Terminal 2: mode manager =====
+cd ~/proj_ws && source install/setup.bash
+ros2 launch home_robot_mode mode.launch.py
+
+# ===== Terminal 3: Nav2 (map + AMCL) + patrol node  (start after Terminal 1 is up) =====
+cd ~/proj_ws && source install/setup.bash
+ros2 launch home_robot_nav nav.launch.py
+
+# ===== Terminal 4: mode keys (p: patrol, c: return to charger, r: reset emergency, q: quit) =====
+cd ~/proj_ws && source install/setup.bash
+ros2 run home_robot_mode key_trigger
+
+# ===== Terminal 5: watch current mode / send test events =====
+cd ~/proj_ws && source install/setup.bash
+ros2 topic echo /mode
+# ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_detected}"
+# ros2 topic pub --once -w 2 /mode_event std_msgs/msg/String "{data: fire_alarm}"
+
+# ===== Optional: RViz (map, robot pose, path) =====
+cd ~/proj_ws && source install/setup.bash
+ros2 launch nav2_bringup rviz_launch.py
+
+# ===== Optional: manual drive (do not use while patrolling) =====
+cd ~/proj_ws && source install/setup.bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+# ===== Tool: regenerate the pre-built map after world changes =====
+cd ~/proj_ws && python3 src/home_robot_nav/tools/make_map.py src/home_world/worlds/house.sdf src/home_robot_nav/maps && colcon build --packages-select home_robot_nav

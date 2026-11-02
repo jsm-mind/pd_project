@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="charger">
+    <static>true</static>
+    <link name="link">
+      <visual name="pad">
+        <pose>0 0 0.01 0 0 0</pose>
+        <geometry><cylinder><radius>0.3</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+      </visual>
+      <visual name="ring">
+        <pose>0 0 0.021 0 0 0</pose>
+        <geometry><cylinder><radius>0.12</radius><length>0.002</length></cylinder></geometry>
+        <material><ambient>0 0.6 1 1</ambient><diffuse>0 0.6 1 1</diffuse><emissive>0 0.4 0.8 1</emissive></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

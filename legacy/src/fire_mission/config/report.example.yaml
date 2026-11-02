@@ -1,0 +1,3 @@
+# Example report settings. Copy to ~/.config/fire_robot/report.yaml (outside the
+# repository) and fill in the real address. Do not commit the real file.
+address: "OO시 OO구 OO로 00"

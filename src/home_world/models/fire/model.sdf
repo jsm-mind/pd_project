@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<!-- Particle/light settings taken from fire_effects in fire_house_scene.sdf.
+     Emitters are pitched -90 deg so particles go up (+Z).
+     Particle color comes from the albedo texture (color_range_image paths are not resolved). -->
+<sdf version="1.9">
+  <model name="fire">
+    <static>true</static>
+    <link name="link">
+      <particle_emitter name="flame_core" type="box">
+        <emitting>true</emitting>
+        <pose>0 0 0.05 0 -1.5708 0</pose>
+        <size>0.05 0.30 0.30</size>
+        <particle_size>0.25 0.25 0.25</particle_size>
+        <lifetime>0.8</lifetime>
+        <rate>45</rate>
+        <min_velocity>0.6</min_velocity>
+        <max_velocity>1.6</max_velocity>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal><albedo_map>materials/textures/flame.png</albedo_map></metal></pbr>
+        </material>
+      </particle_emitter>
+      <particle_emitter name="flame_outer" type="box">
+        <emitting>true</emitting>
+        <pose>0 0 0 0 -1.5708 0</pose>
+        <size>0.05 0.60 0.60</size>
+        <particle_size>0.45 0.45 0.45</particle_size>
+        <lifetime>1.3</lifetime>
+        <rate>35</rate>
+        <min_velocity>0.5</min_velocity>
+        <max_velocity>1.3</max_velocity>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal><albedo_map>materials/textures/flame.png</albedo_map></metal></pbr>
+        </material>
+      </particle_emitter>
+      <particle_emitter name="embers" type="box">
+        <emitting>true</emitting>
+        <pose>0 0 0.25 0 -1.5708 0</pose>
+        <size>0.05 0.50 0.50</size>
+        <particle_size>0.04 0.04 0.04</particle_size>
+        <lifetime>2.0</lifetime>
+        <rate>20</rate>
+        <min_velocity>0.8</min_velocity>
+        <max_velocity>2.0</max_velocity>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal><albedo_map>materials/textures/ember.png</albedo_map></metal></pbr>
+        </material>
+      </particle_emitter>
+      <particle_emitter name="smoke_dense" type="box">
+        <emitting>true</emitting>
+        <pose>0 0 0.85 0 -1.5708 0</pose>
+        <size>0.10 1.20 1.20</size>
+        <particle_size>1.0 1.0 1.0</particle_size>
+        <lifetime>6.0</lifetime>
+        <rate>20</rate>
+        <min_velocity>0.4</min_velocity>
+        <max_velocity>1.0</max_velocity>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal><albedo_map>materials/textures/smoke.png</albedo_map></metal></pbr>
+        </material>
+      </particle_emitter>
+      <light type="point" name="light_fire">
+        <pose>0 0 0.15 0 0 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <diffuse>1 0.5 0.1 1</diffuse><specular>0.5 0.2 0 1</specular>
+        <attenuation><range>6</range><constant>0.3</constant><linear>0.1</linear><quadratic>0.02</quadratic></attenuation>
+      </light>
+      <visual name="glow">
+        <pose>0 0 0.1 0 0 0</pose>
+        <geometry><sphere><radius>0.18</radius></sphere></geometry>
+        <material><ambient>1 0.4 0 0.6</ambient><diffuse>1 0.4 0 0.6</diffuse><emissive>1 0.3 0 1</emissive></material>
+        <plugin filename="gz-sim-thermal-system" name="gz::sim::systems::Thermal">
+          <temperature>873.0</temperature>
+        </plugin>
+      </visual>
+    </link>
+  </model>
+</sdf>
