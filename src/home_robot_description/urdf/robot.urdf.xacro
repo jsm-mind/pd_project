@@ -168,7 +168,7 @@
   <joint name="aerosol_outlet_body_joint" type="fixed">
     <parent link="base_link"/>
     <child link="aerosol_outlet_body"/>
-    <origin xyz="0.10 0 ${body_h / 2 + 0.006}"/>
+    <origin xyz="0.09 0 ${body_h / 2 + 0.006}"/>
   </joint>
   <!-- emission frame, +z up -->
   <link name="aerosol_outlet_link"/>
@@ -180,7 +180,7 @@
 
   <!-- ===== Status ring (top cover, emissive; color set at runtime by status_ring node) =====
        Stacked thin discs seen from above: dark groove, glowing ring, dark groove, white
-       cover. Ring r 0.149-0.166 m, outside the aerosol outlet (reaches r 0.145 m). -->
+       cover. Ring r 0.149-0.166 m, outside the aerosol outlet (reaches r 0.135 m). -->
   <link name="status_ring_base">
     <visual>
       <origin xyz="0 0 0.002"/>

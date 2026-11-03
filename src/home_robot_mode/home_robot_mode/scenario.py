@@ -2,12 +2,12 @@
 
 Scenario 1 (mode_event 'fire_detected' in PATROL/CHARGING):
   call_119 + notify_fire -> evacuation -> suppression (drives to /fire_location)
-  -> notify_done -> mode_event 'emergency_done'
+  -> notify_done -> (done_hold s) -> mode_event 'emergency_done'
 Scenario 2 (mode_event 'fire_alarm' in PATROL/CHARGING):
   ask_check -> evacuation -> drive to /alarm_location with /fire_check on
   (spin 360 deg there if no fire yet); on /fire_location: call_119 +
   notify_confirmed -> suppression in the alarm room ('here', on arrival)
-  -> notify_done -> mode_event 'emergency_done'
+  -> notify_done -> (done_hold s) -> mode_event 'emergency_done'
   The fire is often seen only from afar (stove fire is hidden by the counter up
   close), where its location estimate is rough, so the alarm room is used.
 
@@ -45,12 +45,15 @@ class Scenario(Node):
         self.create_subscription(PoseStamped, 'fire_location', self.on_fire, latched)
         self.nav = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.spin = ActionClient(self, Spin, 'spin')
+        # stay put after notify_done so the status ring shows the final step
+        self.done_hold = self.declare_parameter('done_hold', 3.0).value
+        self.done_timer = None
 
         self.mode = None
         self.entered = False    # EMERGENCY entered from PATROL/CHARGING
         self.cause = None       # 'fire_detected' | 'fire_alarm'
         self.scenario = None    # 1 | 2
-        self.step = None        # 'evacuation' | 'to_alarm' | 'search_fire' | 'stop_spin' | 'suppression'
+        self.step = None        # 'evacuation' | 'to_alarm' | 'search_fire' | 'stop_spin' | 'suppression' | 'done'
         self.alarm = None
         self.goal_handle = None
         self.fire_found = False
@@ -119,6 +122,12 @@ class Scenario(Node):
         if self.step != 'suppression' or msg.data != 'done':
             return
         self.request(self.contact, 'notify_done')
+        self.step = 'done'
+        self.done_timer = self.create_timer(self.done_hold, self.finish)
+
+    def finish(self):
+        self.done_timer.cancel()
+        self.done_timer = None
         self.log('finished')
         self.request(self.event_pub, 'emergency_done')
         self.scenario = None
