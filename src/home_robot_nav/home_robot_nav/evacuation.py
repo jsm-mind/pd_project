@@ -34,7 +34,7 @@ class Evacuation(Node):
         super().__init__('evacuation')
         pts = self.declare_parameter('search_points', [0.0, 0.0]).value
         self.points = [pts[i:i + 2] for i in range(0, len(pts), 2)]
-        self.exit = self.declare_parameter('exit', [5.0, -0.6, 0.0]).value
+        self.exit = self.declare_parameter('exit', [4.2, 0.7, -1.57]).value
         self.approach_dist = self.declare_parameter('approach_dist', 1.0).value
         self.voice_period = self.declare_parameter('voice_period', 8.0).value
         self.guide_speed = self.declare_parameter('guide_speed', 0.8).value

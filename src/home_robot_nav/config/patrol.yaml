@@ -11,6 +11,7 @@ patrol:
       7.5, 1.5, 0.0,      # bedroom 1
     ]
     charger: [0.6, 3.6, 0.0]
+    auto_start: true       # start_patrol once Nav2 is up (time-based trigger later)
     dock_tolerance: 0.05   # AMCL distance to pad center [m]; pad r=0.3, robot r=0.21, AMCL err ~0.04
 
 evacuation:
@@ -25,7 +26,8 @@ evacuation:
       9.0, 3.7,     # corridor
       7.5, 1.5,     # bedroom 1
     ]
-    exit: [5.0, -0.6, 0.0]     # outside the south front door, beside the doorway
+    exit: [4.2, 0.7, -1.57]    # inside the south front door, facing out (robot cannot climb back over the
+                               # 0.1 m floor step); the resident walks on out to the assembly point
     approach_dist: 1.0
     voice_period: 8.0
     guide_speed: 0.8           # [m/s] while leading the resident (search: full speed)
@@ -36,3 +38,4 @@ suppression:
                            # robot (r 0.22) edge stops ~0.08 m off the furniture
     fire_out_delay: 5.0    # [s] after release, the fire model is removed
     cloud_time: 20.0       # [s] aerosol cloud visual lifetime
+    release_radius: 1.5    # [m] standoff unreachable but this close to the fire -> release there

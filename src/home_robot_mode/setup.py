@@ -22,6 +22,7 @@ setup(
             'mode_manager = home_robot_mode.mode_manager:main',
             'key_trigger = home_robot_mode.key_trigger:main',
             'alarm_receiver = home_robot_mode.alarm_receiver:main',
+            'scenario = home_robot_mode.scenario:main',
         ],
     },
 )

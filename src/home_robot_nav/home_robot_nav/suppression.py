@@ -5,7 +5,10 @@
   ignite the aerosol (terminal), show the cloud (aerosol model spawned at
   aerosol_outlet_link, visual only), remove the fire model after fire_out_delay and the
   cloud after cloud_time, then /suppression_status 'done'.
-  If the standoff point is not reached in 4 tries, release where the robot stopped.
+  If the standoff point is not reached (e.g. inside the counter's costmap), release where
+  the robot stopped when within release_radius of the fire, else retry (4 tries in all).
+/suppression_request 'here': release at the current position (robot already in the
+  fire space, scenario 2: alarm room).
 The unit is single-use: later requests are only logged.
 """
 import os
@@ -38,6 +41,7 @@ class Suppression(Node):
         self.standoff = self.declare_parameter('standoff', 0.3).value
         self.fire_out_delay = self.declare_parameter('fire_out_delay', 5.0).value
         self.cloud_time = self.declare_parameter('cloud_time', 20.0).value
+        self.release_radius = self.declare_parameter('release_radius', 1.5).value
 
         self.gz = GzNode()
         self.nav = ActionClient(self, NavigateToPose, 'navigate_to_pose')
@@ -58,10 +62,14 @@ class Suppression(Node):
         self.fire = (msg.pose.position.x, msg.pose.position.y)
 
     def on_request(self, msg):
-        if msg.data != 'start' or self.busy:
+        if msg.data not in ('start', 'here') or self.busy:
             return
         if self.used:
             self.get_logger().warn('Aerosol unit already used (single-use)')
+            return
+        if msg.data == 'here':
+            self.busy = True
+            self.release()
             return
         robot = self.robot_xy()
         if self.fire is None or robot is None:
@@ -97,7 +105,12 @@ class Suppression(Node):
         handle.get_result_async().add_done_callback(lambda f: self.on_result(f.result().status))
 
     def on_result(self, status):
+        robot = self.robot_xy()
         if status == GoalStatus.STATUS_SUCCEEDED:
+            self.release()
+        elif robot is not None and math.dist(robot, self.fire) <= self.release_radius:
+            # already in the fire space; the aerosol fills it, no need to get closer
+            self.get_logger().warn('Standoff point unreachable; in the fire space, releasing here')
             self.release()
         elif self.tries < 3:
             self.tries += 1

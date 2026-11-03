@@ -4,7 +4,10 @@ PATROL      : visit waypoints in a loop.
 go_charge   : (event while PATROL) cancel patrol, drive to the charger;
               on arrival, force AMCL updates while stopped (it does not update
               without motion), then publish 'docked' if within dock_tolerance.
+EMERGENCY -> CHARGING (suppression done or reset): drive back to the charger and dock.
 other modes : cancel any active goal.
+auto_start  : publish 'start_patrol' once when Nav2 is up (stand-in for the
+              later time-based trigger; keys still work).
 """
 import math
 
@@ -28,6 +31,7 @@ class Patrol(Node):
         self.waypoints = [wp[i:i + 3] for i in range(0, len(wp), 3)]
         self.charger = self.declare_parameter('charger', [0.6, 3.6, 0.0]).value
         self.dock_tol = self.declare_parameter('dock_tolerance', 0.05).value
+        self.auto_start = self.declare_parameter('auto_start', True).value
 
         self.nav = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.nomotion = self.create_client(Empty, 'request_nomotion_update')
@@ -44,15 +48,29 @@ class Patrol(Node):
         self.index = 0
         self.goal_handle = None
         self.amcl_xy = None
+        if self.auto_start:
+            self.start_timer = self.create_timer(1.0, self.on_start_timer)
 
     # ---------- inputs ----------
+    def on_start_timer(self):
+        if self.mode is None or not self.nav.server_is_ready():
+            return
+        self.start_timer.cancel()
+        if self.mode == 'CHARGING':
+            self.get_logger().info('Auto start: patrol')
+            self.event_pub.publish(String(data='start_patrol'))
+
     def on_mode(self, msg):
-        self.mode = msg.data
+        prev, self.mode = self.mode, msg.data
         if self.mode == 'PATROL' and self.task is None:
             self.task = 'patrol'
             self.index = 0
             self.get_logger().info('Patrol start')
             self.send_next()
+        elif self.mode == 'CHARGING' and prev == 'EMERGENCY':
+            self.get_logger().info('Emergency over, returning to charger')
+            self.task = 'return'
+            self.cancel(then=self.send_next)
         elif self.mode != 'PATROL':
             self.stop()
 
@@ -89,7 +107,12 @@ class Patrol(Node):
 
     def on_accepted(self, future, task):
         handle = future.result()
-        if not handle.accepted or task != self.task:
+        if task != self.task:
+            return
+        if not handle.accepted:
+            # Nav2 action server exists before it is activated; retry until it accepts
+            self.get_logger().warn('Goal rejected (Nav2 not active yet?), retrying in 2 s')
+            retry = self.create_timer(2.0, lambda: (retry.cancel(), self.send_next()))
             return
         self.goal_handle = handle
         handle.get_result_async().add_done_callback(lambda f: self.on_result(f, task))
@@ -117,7 +140,8 @@ class Patrol(Node):
         if self.is_docked():
             self.get_logger().info('Docked on charger')
             self.task = None
-            self.event_pub.publish(String(data='docked'))
+            if self.mode == 'PATROL':   # already CHARGING after an emergency
+                self.event_pub.publish(String(data='docked'))
         else:
             self.get_logger().info('Not on pad yet, retrying')
             self.send_next()

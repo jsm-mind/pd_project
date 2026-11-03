@@ -1,7 +1,8 @@
 """Fire detection from the 32x24 thermal array.
 
 Input : /thermal/image (32FC1, Celsius), /scan, TF, /mode
-Output: /mode_event 'fire_detected' (once, in PATROL or CHARGING)
+        /fire_check 'start' | 'stop' - also detect once in EMERGENCY (scenario 2)
+Output: /mode_event 'fire_detected' (once, in PATROL or CHARGING; not for /fire_check)
         /fire_location (geometry_msgs/PoseStamped, transient_local) -
         fire position in the map: hottest pixel's bearing + lidar range
         (ThermalLocator); robot position if the lidar match fails
@@ -27,18 +28,23 @@ class FireDetector(Node):
         self.event_pub = self.create_publisher(String, 'mode_event', 10)
         self.location_pub = self.create_publisher(PoseStamped, 'fire_location', latched)
         self.create_subscription(String, 'mode', self.on_mode, latched)
+        self.create_subscription(String, 'fire_check', self.on_check, 10)
         self.locator = ThermalLocator(self, self.on_image)
 
         self.mode = None
         self.sent = False   # one 'fire_detected' per mode entry
+        self.checking = False
 
     def on_mode(self, msg):
         if msg.data != self.mode:
             self.sent = False
         self.mode = msg.data
 
+    def on_check(self, msg):
+        self.checking = msg.data == 'start'
+
     def on_image(self, msg):
-        if self.mode not in ACTIVE_MODES or self.sent:
+        if not self.checking and (self.mode not in ACTIVE_MODES or self.sent):
             return
         temps = np.frombuffer(msg.data, dtype=np.float32).reshape(msg.height, msg.width)
         row, col = np.unravel_index(np.argmax(temps), temps.shape)
@@ -46,6 +52,7 @@ class FireDetector(Node):
         if peak < self.threshold:
             return
 
+        check, self.checking = self.checking, False
         self.sent = True
         self.get_logger().info(
             f'FIRE detected: {peak:.1f} C at pixel (col {col}, row {row}) in {self.mode}')
@@ -62,7 +69,8 @@ class FireDetector(Node):
             loc.pose.orientation.w = 1.0
             self.location_pub.publish(loc)
             self.get_logger().info(f'Fire location: ({xy[0]:.2f}, {xy[1]:.2f})')
-        self.event_pub.publish(String(data='fire_detected'))
+        if not check:
+            self.event_pub.publish(String(data='fire_detected'))
 
 
 def main():

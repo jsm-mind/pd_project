@@ -27,13 +27,9 @@ def spawn_fire(context):
     x, y, z = FIRE_SPOTS[spot]
     return [
         LogInfo(msg=f'Fire spot: {spot} ({x}, {y}, {z})'),
-        Node(
-            package='ros_gz_sim',
-            executable='create',
-            arguments=['-name', 'fire', '-file', 'model://fire',
-                       '-x', str(x), '-y', str(y), '-z', str(z)],
-            output='screen',
-        ),
+        # the fire breaks out during the patrol (or on the alarm key)
+        Node(package='home_world', executable='fire_sim.py',
+             parameters=[{'fire_spot': spot, 'position': [x, y, z]}], output='screen'),
         Node(package='home_world', executable='fire_alarm_sim.py',
              parameters=[{'fire_spot': spot}], output='screen'),
     ]

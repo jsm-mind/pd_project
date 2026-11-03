@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Simulated fire alarm devices (government-issued, linked to the robot).
 
-One alarm per room, at the room center (map frame). The alarm in the room of
-the spawned fire spot rings when triggered (smoke reaching it is not simulated).
+One alarm per room, on the ceiling above open floor (map frame), so the robot
+can stand under it. The alarm in the room of the spawned fire spot rings when
+triggered (smoke reaching it is not simulated).
 
 Input : /fire_alarm_trigger (std_msgs/Empty) - from the key window ('a')
 Output: /fire_alarm (geometry_msgs/PoseStamped, map) - ringing alarm's position
@@ -14,11 +15,11 @@ from std_msgs.msg import Empty
 
 # room -> alarm position (x, y) in map
 ALARMS = {
-    'living_room': (2.60, 2.19),
-    'kitchen': (2.51, 6.26),
-    'utility_room': (4.80, 7.12),
+    'living_room': (3.20, 2.55),
+    'kitchen': (2.52, 6.28),
+    'utility_room': (4.80, 6.60),
     'bedroom1': (8.00, 1.45),
-    'bedroom2': (9.07, 6.32),
+    'bedroom2': (8.14, 5.25),
 }
 # fire spot (world.launch.py FIRE_SPOTS) -> room
 SPOT_ROOM = {

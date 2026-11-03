@@ -20,6 +20,7 @@ TRANSITIONS = {
     (CHARGING, 'fire_detected'): EMERGENCY,
     (PATROL, 'fire_alarm'): EMERGENCY,
     (CHARGING, 'fire_alarm'): EMERGENCY,
+    (EMERGENCY, 'emergency_done'): CHARGING,  # sent by scenario node after suppression
     (EMERGENCY, 'reset'): CHARGING,  # demo/test only
 }
 

@@ -3,10 +3,6 @@
 Input : /contact_request (std_msgs/String) - request names in MESSAGES or 'call_119'
         /fire_location   (PoseStamped, transient_local) - shown in messages
         /alarm_location  (PoseStamped, transient_local) - shown when no fire location yet
-        /mode, /mode_event - scenario 1 step 3: fire_detected in PATROL/CHARGING
-                             -> call_119 + notify_fire
-                             scenario 2 step 2: fire_alarm in PATROL/CHARGING -> ask_check
-                             (move to the scenario node in M10)
 Output: Twilio call to call_number (or a log line when call_enabled is false),
         boxed messages on the terminal
 """
@@ -51,9 +47,6 @@ class Contact(Node):
         self.create_subscription(String, 'contact_request', self.on_request, 10)
         self.create_subscription(PoseStamped, 'fire_location', self.on_location, latched)
         self.create_subscription(PoseStamped, 'alarm_location', self.on_alarm, latched)
-        self.create_subscription(String, 'mode', self.on_mode, latched)
-        self.create_subscription(String, 'mode_event', self.on_event, 10)
-        self.mode = None
         self.location = None
         self.alarm = None
 
@@ -63,16 +56,6 @@ class Contact(Node):
 
     def on_alarm(self, msg):
         self.alarm = (msg.pose.position.x, msg.pose.position.y)
-
-    def on_mode(self, msg):
-        self.mode = msg.data
-
-    def on_event(self, msg):
-        if msg.data == 'fire_detected' and self.mode in ('PATROL', 'CHARGING'):
-            self.dispatch('call_119')
-            self.dispatch('notify_fire')
-        elif msg.data == 'fire_alarm' and self.mode in ('PATROL', 'CHARGING'):
-            self.dispatch('ask_check')
 
     def on_request(self, msg):
         self.dispatch(msg.data)
