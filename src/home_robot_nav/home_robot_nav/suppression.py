@@ -4,7 +4,7 @@
   drive to standoff from /fire_location (along the line robot -> fire),
   ignite the aerosol (terminal), show the cloud (aerosol model spawned at
   aerosol_outlet_link, visual only), remove the fire model after fire_out_delay and the
-  cloud after cloud_time, then /suppression_status 'done'.
+  cloud after cloud_time; /suppression_status 'releasing' at ignition, 'done' at the end.
   If the standoff point is not reached (e.g. inside the counter's costmap), release where
   the robot stopped when within release_radius of the fire, else retry (4 tries in all).
 /suppression_request 'here': release at the current position (robot already in the
@@ -126,6 +126,7 @@ class Suppression(Node):
         self.used = True
         bar = '=' * 60
         print(f'{bar}\n[에어로졸] 전기 점화 - 고체 에어로졸 방출\n{bar}', flush=True)
+        self.status.publish(String(data='releasing'))
         # cloud model frame = outlet frame (emits along +z)
         t = self.lookup('aerosol_outlet_link')
         req = EntityFactory(sdf_filename='model://aerosol', name='aerosol')

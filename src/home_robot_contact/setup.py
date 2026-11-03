@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'contact = home_robot_contact.contact:main',
             'guidance = home_robot_contact.guidance:main',
+            'status_ring = home_robot_contact.status_ring:main',
         ],
     },
 )

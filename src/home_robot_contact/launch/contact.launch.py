@@ -23,4 +23,6 @@ def generate_launch_description():
         Node(package='home_robot_contact', executable='contact',
              parameters=params, output='screen', emulate_tty=True),
         Node(package='home_robot_contact', executable='guidance', output='screen', emulate_tty=True),
+        Node(package='home_robot_contact', executable='status_ring', output='screen',
+             emulate_tty=True),
     ])

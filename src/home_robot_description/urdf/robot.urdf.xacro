@@ -177,6 +177,54 @@
     <origin xyz="0 0 0.008"/>
   </joint>
 
+  <!-- ===== Status ring (top cover, emissive; color set at runtime by status_ring node) =====
+       Stacked thin discs seen from above: dark groove, glowing ring, dark groove, white
+       cover. Ring r 0.149-0.166 m, outside the aerosol outlet (reaches r 0.145 m). -->
+  <link name="status_ring_base">
+    <visual>
+      <origin xyz="0 0 0.002"/>
+      <geometry><cylinder radius="0.169" length="0.004"/></geometry>
+      <material name="dark"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.0035"/>
+      <geometry><cylinder radius="0.146" length="0.007"/></geometry>
+      <material name="body_white"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.003"/>
+      <geometry><cylinder radius="0.149" length="0.006"/></geometry>
+      <material name="dark"/>
+    </visual>
+  </link>
+  <joint name="status_ring_base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="status_ring_base"/>
+    <origin xyz="0 0 ${body_h / 2}"/>
+  </joint>
+  <!-- the glowing ring itself; status_ring node finds its visual by name -->
+  <link name="status_ring">
+    <visual name="status_ring_visual">
+      <origin xyz="0 0 0.0025"/>
+      <geometry><cylinder radius="0.166" length="0.005"/></geometry>
+      <material name="ring_white"><color rgba="1 1 1 1"/></material>
+    </visual>
+  </link>
+  <joint name="status_ring_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="status_ring"/>
+    <origin xyz="0 0 ${body_h / 2}"/>
+  </joint>
+  <gazebo reference="status_ring">
+    <visual>
+      <material>
+        <ambient>1 1 1 1</ambient>
+        <diffuse>1 1 1 1</diffuse>
+        <emissive>1 1 1 1</emissive>
+      </material>
+    </visual>
+  </gazebo>
+
   <!-- ===== Floor arrow beam projector (front low, points down-forward) ===== -->
   <link name="projector_body">
     <visual>
