@@ -2,10 +2,12 @@
 """Simulated fire alarm devices (government-issued, linked to the robot).
 
 One alarm per room, on the ceiling above open floor (map frame), so the robot
-can stand under it. The alarm in the room of the spawned fire spot rings when
-triggered (smoke reaching it is not simulated).
+can stand under it. The alarm in the room of the spawned fire spot rings
+alarm_delay s after the fire breaks out (time for the smoke to reach it; the
+smoke itself is not simulated), or right away when triggered by hand.
 
-Input : /fire_alarm_trigger (std_msgs/Empty) - from the key window ('a')
+Input : /fire_started       (std_msgs/Empty) - from fire_sim
+        /fire_alarm_trigger (std_msgs/Empty) - from the key window ('a')
 Output: /fire_alarm (geometry_msgs/PoseStamped, map) - ringing alarm's position
 """
 import rclpy
@@ -36,10 +38,25 @@ class FireAlarmSim(Node):
     def __init__(self):
         super().__init__('fire_alarm_sim')
         self.room = SPOT_ROOM[self.declare_parameter('fire_spot', 'tv_stand').value]
+        self.alarm_delay = self.declare_parameter('alarm_delay', 10.0).value
         self.pub = self.create_publisher(PoseStamped, 'fire_alarm', 10)
         self.create_subscription(Empty, 'fire_alarm_trigger', self.on_trigger, 10)
+        self.create_subscription(Empty, 'fire_started', self.on_fire, 10)
+        self.timer = None
+        self.rang = False
+
+    def on_fire(self, _):
+        if self.timer is None:
+            self.get_logger().info(f'Smoke spreading; alarm in {self.room} rings in {self.alarm_delay:.0f} s')
+            self.timer = self.create_timer(self.alarm_delay, self.on_delay)
+
+    def on_delay(self):
+        self.timer.cancel()
+        if not self.rang:     # already rung by hand ('a' before the fire)
+            self.on_trigger(None)
 
     def on_trigger(self, _):
+        self.rang = True
         x, y = ALARMS[self.room]
         msg = PoseStamped()
         msg.header.frame_id = 'map'

@@ -9,8 +9,9 @@ echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/inst
 # ===== Run everything (one terminal) =====
 # Gazebo + robot + mode/fire+person detector/contact/guidance + Nav2/patrol/evacuation/suppression (after 15 s) + key window (xterm)
 # Patrol starts by itself once Nav2 is up; the fire breaks out 10-40 s after the patrol starts
+# the alarm in the fire's room rings by itself 10 s after the fire breaks out (scenario 2 if the robot has not seen the fire yet; ignored once in EMERGENCY)
 # Scenario 1: robot finds the fire while patrolling -> 119 + contact -> resident search/evacuation -> suppression -> contact -> CHARGING, back to charger (all automatic)
-# Scenario 2: press a (fire alarm) before the fire appears (it appears with the alarm) -> contact -> evacuation -> alarm room -> fire found: 119 + contact -> suppression -> contact -> back to charger
+# Scenario 2: automatic alarm above, or press a (fire alarm) before the fire appears (it appears with the alarm) for a sure scenario 2 -> contact -> evacuation -> alarm room -> fire found: 119 + contact -> suppression -> contact -> back to charger
 # the aerosol is single-use: restart "fire" for the next demo (r: reset EMERGENCY -> CHARGING, robot returns to charger)
 # status ring on the robot top: blue patrol / white returning, charging / red fast blink 119+contact (3 s) / red search, to fire / green blink evacuation / purple blink aerosol / purple contact after suppression (3 s)
 # keys in the xterm window: p: patrol, c: return to charger, a: ring fire alarm (room of the fire), r: reset emergency, q: quit

@@ -7,6 +7,7 @@ when the fire alarm is triggered before that (an alarm means a fire).
 
 Input : /mode (std_msgs/String), /fire_alarm_trigger (std_msgs/Empty)
 Output: 'fire' model in Gazebo (removed later by the suppression node)
+        /fire_started (std_msgs/Empty) - to the alarm simulator (smoke starts spreading)
 """
 import os
 os.environ.setdefault('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION', 'python')  # gz python msgs
@@ -32,6 +33,7 @@ class FireSim(Node):
         self.delay_min = self.declare_parameter('delay_min', 10.0).value
         self.delay_max = self.declare_parameter('delay_max', 40.0).value
         self.gz = GzNode()
+        self.started_pub = self.create_publisher(Empty, 'fire_started', 10)
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, 'mode', self.on_mode, latched)
         self.create_subscription(Empty, 'fire_alarm_trigger', lambda _: self.spawn(), 10)
@@ -54,6 +56,7 @@ class FireSim(Node):
         req = EntityFactory(sdf_filename='model://fire', name='fire')
         req.pose.position.x, req.pose.position.y, req.pose.position.z = self.xyz
         self.gz.request(CREATE, req, EntityFactory, Boolean, 2000)
+        self.started_pub.publish(Empty())
         self.get_logger().info(f'FIRE broke out at {self.spot} {tuple(self.xyz)}')
 
 
