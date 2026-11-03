@@ -29,7 +29,7 @@ class FireSim(Node):
     def __init__(self):
         super().__init__('fire_sim')
         self.spot = self.declare_parameter('fire_spot', 'tv_stand').value
-        self.xyz = self.declare_parameter('position', [4.95, 0.80, 0.60]).value
+        self.xyz = self.declare_parameter('position', [4.95, 2.60, 0.60]).value
         self.delay_min = self.declare_parameter('delay_min', 10.0).value
         self.delay_max = self.declare_parameter('delay_max', 40.0).value
         self.gz = GzNode()

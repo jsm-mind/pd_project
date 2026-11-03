@@ -2,7 +2,7 @@ patrol:
   ros__parameters:
     # Patrol loop, flat list of [x, y, yaw] in map frame
     waypoints: [
-      3.0, 2.8, -0.6,     # living room (faces TV stand)
+      3.0, 2.8, -0.1,     # living room (faces TV stand)
       2.6, 6.0, 3.14,     # kitchen (faces stove 1)
       4.75, 5.3, 1.57,    # utility room entrance
       6.2, 5.2, 1.57,     # hall (bathroom entrance)
@@ -26,8 +26,8 @@ evacuation:
       9.0, 3.7,     # corridor
       7.5, 1.5,     # bedroom 1
     ]
-    exit: [4.2, 0.7, -1.57]    # inside the south front door, facing out (robot cannot climb back over the
-                               # 0.1 m floor step); the resident walks on out to the assembly point
+    exit: [4.2, 1.55, -1.57]   # living room floor just before the genkan step, facing the front door
+                               # (genkan is keepout in the map); the resident walks on out to the assembly point
     approach_dist: 1.0
     voice_period: 8.0
     guide_speed: 0.8           # [m/s] while leading the resident (search: full speed)

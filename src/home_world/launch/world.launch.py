@@ -13,7 +13,7 @@ from launch_ros.actions import Node
 FIRE_SPOTS = {
     'stove_1': (1.15, 6.20, 1.05),
     'stove_2': (3.95, 6.40, 1.05),
-    'tv_stand': (4.95, 0.80, 0.60),
+    'tv_stand': (4.95, 2.60, 0.60),
     'nightstand_bedroom1': (10.50, 0.40, 0.60),
     'nightstand_bedroom2': (10.50, 5.30, 0.60),
     'utility_room': (4.80, 7.10, 0.10),

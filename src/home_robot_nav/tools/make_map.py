@@ -2,7 +2,7 @@
 """Build the pre-provided occupancy map from the house world SDF.
 
 Rasterizes static box collisions that overlap the robot's height band.
-Only <model> elements are used; included models (charger, resident) and
+Only <model> elements are used, plus the KEEPOUT areas; included models (charger, resident) and
 the spawned fire are excluded, plus EXCLUDE below for safety.
 
 usage: make_map.py <world.sdf> <out_dir>
@@ -17,6 +17,8 @@ RES = 0.05
 X_MIN, X_MAX, Y_MIN, Y_MAX = -1.0, 12.0, -1.0, 9.5
 Z_LOW, Z_HIGH = 0.12, 1.09      # world z band: floor top 0.1 + robot height (incl. lidar)
 EXCLUDE = {'ground_plane', 'charger', 'resident', 'fire'}
+# areas the robot must not enter, as world (x0, x1, y0, y1)
+KEEPOUT = [(3.2, 5.14, 0.0, 1.1)]   # genkan: floor 9 cm below the living room
 
 
 def pose(el):
@@ -57,6 +59,10 @@ def main(world_file, out_dir):
                 j0 = int(round((wy - sy / 2 - Y_MIN) / RES))
                 j1 = max(int(round((wy + sy / 2 - Y_MIN) / RES)), j0 + 1)
                 occ[max(j0, 0):max(j1, 0), max(i0, 0):max(i1, 0)] = True
+
+    for x0, x1, y0, y1 in KEEPOUT:
+        occ[int(round((y0 - Y_MIN) / RES)):int(round((y1 - Y_MIN) / RES)),
+            int(round((x0 - X_MIN) / RES)):int(round((x1 - X_MIN) / RES))] = True
 
     img = np.where(occ, 0, 254).astype(np.uint8)[::-1]  # row 0 = top (max y)
     os.makedirs(out_dir, exist_ok=True)
