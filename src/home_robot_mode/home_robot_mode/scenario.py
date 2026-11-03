@@ -11,7 +11,7 @@ Scenario 2 (mode_event 'fire_alarm' in PATROL/CHARGING):
   The fire is often seen only from afar (stove fire is hidden by the counter up
   close), where its location estimate is rough, so the alarm room is used.
 
-Requests : /contact_request, /evacuation_request, /suppression_request, /fire_check
+Requests : /contact_request, /evacuation_request, /suppression_request, /fire_check, /voice
 Statuses : /evacuation_status, /suppression_status, /fire_location
 """
 import math
@@ -37,6 +37,7 @@ class Scenario(Node):
         self.evacuation = self.create_publisher(String, 'evacuation_request', 10)
         self.suppression = self.create_publisher(String, 'suppression_request', 10)
         self.fire_check = self.create_publisher(String, 'fire_check', 10)
+        self.voice = self.create_publisher(String, 'voice', 10)
         self.create_subscription(String, 'mode', self.on_mode, latched)
         self.create_subscription(String, 'mode_event', self.on_event, 10)
         self.create_subscription(String, 'evacuation_status', self.on_evacuation, 10)
@@ -84,10 +85,12 @@ class Scenario(Node):
             return
         if self.cause == 'fire_detected':
             self.start(1)
+            self.request(self.voice, 'fire_detected')
             self.request(self.contact, 'call_119')
             self.request(self.contact, 'notify_fire')
         else:
             self.start(2)
+            self.request(self.voice, 'fire_alarm')
             self.request(self.contact, 'ask_check')
         self.step = 'evacuation'
         self.request(self.evacuation, 'start')
@@ -111,6 +114,7 @@ class Scenario(Node):
         x, y = msg.pose.position.x, msg.pose.position.y
         self.log(f'fire found at ({x:.2f}, {y:.2f})')
         self.fire_found = True
+        self.request(self.voice, 'fire_confirmed')
         self.request(self.contact, 'call_119')
         self.request(self.contact, 'notify_confirmed')
         if self.step == 'search_fire':
@@ -121,6 +125,7 @@ class Scenario(Node):
     def on_suppression(self, msg):
         if self.step != 'suppression' or msg.data != 'done':
             return
+        self.request(self.voice, 'suppression_done')
         self.request(self.contact, 'notify_done')
         self.step = 'done'
         self.done_timer = self.create_timer(self.done_hold, self.finish)

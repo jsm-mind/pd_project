@@ -1,6 +1,7 @@
 """Evacuation guidance outputs: voice and floor arrow projector.
 
-Input : /voice     (std_msgs/String) - spoken line (terminal + spd-say)
+Input : /voice     (std_msgs/String) - line key in voice_lines.LINES (terminal + pre-made
+                                         wav, played one after another with paplay)
         /projector (std_msgs/Bool)   - floor arrow in front of the robot on/off
 Output: Gazebo marker (visual only) drawn from TF map <- base_footprint
 """
@@ -8,9 +9,12 @@ import os
 os.environ.setdefault('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION', 'python')  # gz python msgs
 
 import math  # noqa: E402
+import queue  # noqa: E402
 import subprocess  # noqa: E402
+import threading  # noqa: E402
 
 import rclpy  # noqa: E402
+from ament_index_python.packages import get_package_share_directory  # noqa: E402
 from gz.msgs10.boolean_pb2 import Boolean  # noqa: E402
 from gz.msgs10.marker_pb2 import Marker  # noqa: E402
 from gz.msgs10.marker_v_pb2 import Marker_V  # noqa: E402
@@ -20,6 +24,8 @@ from rclpy.node import Node  # noqa: E402
 from rclpy.time import Time  # noqa: E402
 from std_msgs.msg import Bool, String  # noqa: E402
 from tf2_ros import Buffer, TransformListener  # noqa: E402
+
+from .voice_lines import LINES  # noqa: E402
 
 MARKER_SRV = '/marker_array'   # GUI scene; '/marker' is one-way (no reply)
 FLOOR_Z = 0.105
@@ -41,15 +47,26 @@ class Guidance(Node):
         self.create_subscription(String, 'voice', self.on_voice, 10)
         self.create_subscription(Bool, 'projector', self.on_projector, 10)
         self.timer = None
+        self.voice_dir = os.path.join(get_package_share_directory('home_robot_contact'), 'voice')
+        self.playlist = queue.Queue()
+        threading.Thread(target=self.player, daemon=True).start()
 
     def on_voice(self, msg):
+        if msg.data not in LINES:
+            self.get_logger().warn(f'Unknown voice line "{msg.data}"')
+            return
         bar = '-' * 60
-        print(f'{bar}\n[음성 안내] {msg.data}\n{bar}', flush=True)
-        try:
-            subprocess.Popen(['spd-say', '-l', 'ko', msg.data],
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except OSError:
-            pass
+        print(f'{bar}\n[음성 안내] {LINES[msg.data]}\n{bar}', flush=True)
+        self.playlist.put(os.path.join(self.voice_dir, msg.data + '.wav'))
+
+    def player(self):
+        # one line at a time so announcements never overlap
+        while True:
+            wav = self.playlist.get()
+            try:
+                subprocess.run(['paplay', wav], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except OSError:
+                pass
 
     def on_projector(self, msg):
         if msg.data and self.timer is None:

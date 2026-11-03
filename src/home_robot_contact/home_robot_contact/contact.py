@@ -44,6 +44,7 @@ class Contact(Node):
         self.caller = self.declare_parameter('twilio_from', '').value
 
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.voice = self.create_publisher(String, 'voice', 10)
         self.create_subscription(String, 'contact_request', self.on_request, 10)
         self.create_subscription(PoseStamped, 'fire_location', self.on_location, latched)
         self.create_subscription(PoseStamped, 'alarm_location', self.on_alarm, latched)
@@ -63,8 +64,11 @@ class Contact(Node):
     def dispatch(self, request):
         if request == 'call_119':
             self.call_119()
+            self.say('called_119')
         elif request in MESSAGES:
             self.notify(MESSAGES[request])
+            # only the fact of the contact is announced, not its content
+            self.say('asked_check' if request == 'ask_check' else 'notified_guardian')
         else:
             self.get_logger().warn(f'Unknown contact request "{request}"')
 
@@ -85,6 +89,9 @@ class Contact(Node):
         ]
         bar = '=' * 60
         print('\n'.join([bar, *lines, bar]), flush=True)
+
+    def say(self, key):
+        self.voice.publish(String(data=key))
 
     def call_119(self):
         speech = f'단독주택 화재 신고입니다. 주소는 {self.address} 입니다. 거주자가 있을 수 있습니다.'

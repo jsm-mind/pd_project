@@ -1,3 +1,5 @@
+from glob import glob
+
 from setuptools import setup
 
 package_name = 'home_robot_contact'
@@ -11,6 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/config', ['config/contact.yaml']),
         ('share/' + package_name + '/launch', ['launch/contact.launch.py']),
+        ('share/' + package_name + '/voice', glob('voice/*.wav')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

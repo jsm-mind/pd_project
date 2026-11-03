@@ -34,6 +34,8 @@ ros2 topic echo /mode
 # ros2 topic pub --once -w 1 /fire_alarm_trigger std_msgs/msg/Empty "{}"      # M9: same as key 'a' (alarm in the fire's room rings)
 # ros2 topic echo --qos-durability transient_local /alarm_location   # alarm position received by the robot
 # ros2 topic pub --once -w 1 /contact_request std_msgs/msg/String "{data: call_119}"     # also: notify_fire ask_check notify_confirmed notify_done
+# ros2 topic pub --once -w 1 /voice std_msgs/msg/String "{data: fire_detected}"   # M12: play a voice line (keys in home_robot_contact/voice_lines.py)
+# python3 src/home_robot_contact/tools/make_voice.py && colcon build --packages-select home_robot_contact   # M12: remake voice/*.wav after editing voice_lines.py (gTTS, needs internet)
 
 # ===== Optional: RViz (map, robot pose, path) =====
 ros2 launch nav2_bringup rviz_launch.py

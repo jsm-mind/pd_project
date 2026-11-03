@@ -48,6 +48,7 @@ class Suppression(Node):
         self.tf = Buffer()
         TransformListener(self.tf, self)
         self.status = self.create_publisher(String, 'suppression_status', 10)
+        self.voice = self.create_publisher(String, 'voice', 10)
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(PoseStamped, 'fire_location', self.on_fire, latched)
         self.create_subscription(String, 'suppression_request', self.on_request, 10)
@@ -127,6 +128,7 @@ class Suppression(Node):
         bar = '=' * 60
         print(f'{bar}\n[에어로졸] 전기 점화 - 고체 에어로졸 방출\n{bar}', flush=True)
         self.status.publish(String(data='releasing'))
+        self.voice.publish(String(data='suppression_start'))
         # cloud model frame = outlet frame (emits along +z)
         t = self.lookup('aerosol_outlet_link')
         req = EntityFactory(sdf_filename='model://aerosol', name='aerosol')

@@ -24,9 +24,10 @@ from rclpy.time import Time
 from std_msgs.msg import Bool, String
 from tf2_ros import Buffer, TransformListener
 
-SAY_FOUND = '화재가 발생했습니다. 저를 따라 대피하세요.'
-SAY_GUIDE = '출구는 이쪽입니다. 저를 따라오세요.'
-SAY_DONE = '대피가 완료되었습니다. 건물 밖에서 기다려 주세요.'
+# voice line keys (home_robot_contact voice_lines)
+SAY_FOUND = 'evac_found'
+SAY_GUIDE = 'evac_guide'
+SAY_DONE = 'evac_done'
 
 
 class Evacuation(Node):
