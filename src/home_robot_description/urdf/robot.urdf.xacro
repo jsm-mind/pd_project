@@ -6,8 +6,15 @@
   <xacro:property name="body_r" value="0.17"/>
   <xacro:property name="body_h" value="0.89"/>   <!-- top cover at 0.95 m -->
   <xacro:property name="body_z0" value="0.06"/>   <!-- ground clearance -->
-  <xacro:property name="body_mass" value="10.0"/>
-  <xacro:property name="com_z" value="0.25"/>    <!-- heavy aerosol units / battery sit low -->
+  <xacro:property name="body_mass" value="3.0"/>    <!-- shell, sensors, towel, projector -->
+
+  <!-- Heavy parts low in the body (inertial only, hidden inside) -->
+  <xacro:property name="aerosol_mass" value="4.5"/> <!-- per unit, 217 x 99 mm, x2 -->
+  <xacro:property name="battery_mass" value="2.5"/>
+
+  <!-- Ball casters front/rear, bottom level with the tri-star wheel contacts -->
+  <xacro:property name="caster_r" value="0.025"/>
+  <xacro:property name="caster_x" value="0.14"/>
 
   <!-- Tri-star: frame fixed to body, 3 small wheels at 120 deg; bottom two touch the floor -->
   <xacro:property name="wheel_r" value="0.035"/>
@@ -49,7 +56,6 @@
       <geometry><cylinder radius="${body_r}" length="${body_h}"/></geometry>
     </collision>
     <inertial>
-      <origin xyz="0 0 ${com_z - body_z0 - body_h / 2}"/>
       <mass value="${body_mass}"/>
       <xacro:cyl_inertia m="${body_mass}" r="${body_r}" h="${body_h}"/>
     </inertial>
@@ -134,6 +140,71 @@
 
   <xacro:tristar side="left" y="1"/>
   <xacro:tristar side="right" y="-1"/>
+
+  <!-- ===== Heavy parts: 2 solid aerosol units upright side by side, battery under them ===== -->
+  <xacro:macro name="aerosol_unit" params="idx y">
+    <link name="aerosol_unit_${idx}">
+      <inertial>
+        <mass value="${aerosol_mass}"/>
+        <xacro:cyl_inertia m="${aerosol_mass}" r="0.0495" h="0.217"/>
+      </inertial>
+    </link>
+    <joint name="aerosol_unit_${idx}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="aerosol_unit_${idx}"/>
+      <origin xyz="0 ${y} ${0.17 - body_z0 - body_h / 2}"/>
+    </joint>
+  </xacro:macro>
+  <xacro:aerosol_unit idx="1" y="0.055"/>
+  <xacro:aerosol_unit idx="2" y="-0.055"/>
+
+  <link name="battery_link">
+    <inertial>
+      <mass value="${battery_mass}"/>
+      <inertia ixx="${battery_mass * (0.10 * 0.10 + 0.06 * 0.06) / 12}" ixy="0" ixz="0"
+               iyy="${battery_mass * (0.15 * 0.15 + 0.06 * 0.06) / 12}" iyz="0"
+               izz="${battery_mass * (0.15 * 0.15 + 0.10 * 0.10) / 12}"/>
+    </inertial>
+  </link>
+  <joint name="battery_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="battery_link"/>
+    <origin xyz="0 0 ${0.09 - body_z0 - body_h / 2}"/>
+  </joint>
+
+  <!-- ===== Ball casters (front/rear, frictionless) ===== -->
+  <xacro:macro name="caster" params="pos x">
+    <link name="${pos}_caster">
+      <!-- housing fills the gap between the ball and the body bottom -->
+      <visual>
+        <origin xyz="0 0 ${(body_z0 + caster_r) / 2 - caster_r}"/>
+        <geometry><cylinder radius="${caster_r + 0.005}" length="${body_z0 - caster_r}"/></geometry>
+        <material name="outlet_gray"/>
+      </visual>
+      <visual>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+        <material name="dark"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="0.05"/>
+        <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+      </inertial>
+    </link>
+    <joint name="${pos}_caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${pos}_caster"/>
+      <origin xyz="${x} 0 ${caster_r - body_z0 - body_h / 2}"/>
+    </joint>
+    <gazebo reference="${pos}_caster">
+      <mu1>0.0</mu1>
+      <mu2>0.0</mu2>
+    </gazebo>
+  </xacro:macro>
+  <xacro:caster pos="front" x="${caster_x}"/>
+  <xacro:caster pos="rear" x="${-caster_x}"/>
 
   <!-- ===== Towel storage (rear, with lid) ===== -->
   <link name="storage_link">
