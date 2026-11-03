@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
-<!-- Unit-1 home fire response robot: small cylindrical body on two tri-star wheel sets. -->
+<!-- Unit-1 home fire response robot: air-purifier-sized cylindrical body (0.95 m tall) on two tri-star wheel sets. -->
 <robot name="home_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Body -->
   <xacro:property name="body_r" value="0.17"/>
-  <xacro:property name="body_h" value="0.26"/>
+  <xacro:property name="body_h" value="0.89"/>   <!-- top cover at 0.95 m -->
   <xacro:property name="body_z0" value="0.06"/>   <!-- ground clearance -->
-  <xacro:property name="body_mass" value="4.0"/>
+  <xacro:property name="body_mass" value="10.0"/>
+  <xacro:property name="com_z" value="0.25"/>    <!-- heavy aerosol units / battery sit low -->
 
   <!-- Tri-star: frame fixed to body, 3 small wheels at 120 deg; bottom two touch the floor -->
   <xacro:property name="wheel_r" value="0.035"/>
@@ -48,6 +49,7 @@
       <geometry><cylinder radius="${body_r}" length="${body_h}"/></geometry>
     </collision>
     <inertial>
+      <origin xyz="0 0 ${com_z - body_z0 - body_h / 2}"/>
       <mass value="${body_mass}"/>
       <xacro:cyl_inertia m="${body_mass}" r="${body_r}" h="${body_h}"/>
     </inertial>
@@ -267,7 +269,8 @@
     <origin xyz="0 0 ${body_h / 2 + 0.02}"/>
   </joint>
 
-  <!-- 32x24 thermal array (MLX90640, 55x35 deg) on front face, tilted 10 deg up -->
+  <!-- 32x24 thermal array (MLX90640, 55x35 deg) high on front face, tilted 15 deg down
+       to see over beds/sofas and the floor beside furniture -->
   <link name="thermal_link">
     <visual>
       <origin xyz="0.005 0 0"/>
@@ -278,7 +281,7 @@
   <joint name="thermal_joint" type="fixed">
     <parent link="base_link"/>
     <child link="thermal_link"/>
-    <origin xyz="${body_r - 0.005} 0 ${body_h / 2 - 0.07}" rpy="0 -0.17 0"/>
+    <origin xyz="${body_r - 0.005} 0 ${body_h / 2 - 0.05}" rpy="0 0.26 0"/>
   </joint>
   <link name="thermal_optical_link"/>
   <joint name="thermal_optical_joint" type="fixed">

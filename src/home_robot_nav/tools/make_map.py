@@ -15,7 +15,7 @@ import numpy as np
 
 RES = 0.05
 X_MIN, X_MAX, Y_MIN, Y_MAX = -1.0, 12.0, -1.0, 9.5
-Z_LOW, Z_HIGH = 0.12, 0.47      # world z band: floor top 0.1 + robot height
+Z_LOW, Z_HIGH = 0.12, 1.09      # world z band: floor top 0.1 + robot height (incl. lidar)
 EXCLUDE = {'ground_plane', 'charger', 'resident', 'fire'}
 
 
