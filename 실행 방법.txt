@@ -20,7 +20,8 @@ pactl set-default-sink alsa_output.platform-3510000.hda.hdmi-stereo
 # sounds: siren once on entering EMERGENCY (fades out at ~8 s) / smoke alarm loop (quiet) from 5 s after the fire (right away with key a) until the fire is extinguished
 #   volumes: src/home_robot_contact/home_robot_contact/sound.py params siren_volume 0.5, alarm_volume 0.3 (voice = 1.0)
 # keys in the xterm window: p: patrol, c: return to charger, a: ring fire alarm (room of the fire), r: reset emergency, q: quit
-fire                      # = ~/proj_ws/run.sh, random fire
+fire                      # = ~/proj_ws/run.sh, fire on stove_1 (default)
+# fire random             # random fire spot
 # fire tv_stand           # fire spot: stove_1 stove_2 tv_stand nightstand_bedroom1 nightstand_bedroom2 utility_room
 # fire build              # colcon build first, then run
 # fire build tv_stand

@@ -86,7 +86,7 @@ fire
 ```
 
 - 약 15초 뒤 Nav2가 뜨면 로봇이 **자동으로 순찰을 시작**합니다.
-- 순찰 시작 후 10~40초 사이에 **랜덤한 위치에서 불이 납니다.**
+- 순찰 시작 후 10~40초 사이에 **주방 가스레인지(`stove_1`)에서 불이 납니다.** 위치를 바꾸려면 아래 옵션을 쓰세요.
 - 이후 시나리오는 모두 자동으로 진행됩니다.
 
 ### 실행 옵션
@@ -95,8 +95,8 @@ fire
 
 | 옵션 | 설명 |
 | --- | --- |
-| (없음) | 랜덤 위치에 불, 경보기 정상 |
-| 불 위치 | `stove_1` `stove_2` `tv_stand` `nightstand_bedroom1` `nightstand_bedroom2` `utility_room` 중 하나 |
+| (없음) | `stove_1`에 불, 경보기 정상 |
+| 불 위치 | `random`(랜덤) `stove_1` `stove_2` `tv_stand` `nightstand_bedroom1` `nightstand_bedroom2` `utility_room` 중 하나 |
 | `noalarm` | 화재 경보기 고장. 로봇이 순찰 중 불을 직접 찾아야 함 (시나리오 1만 나옴) |
 | `build` | 실행 전에 `colcon build` |
 | `rviz` | RViz도 같이 띄움 (맵, 로봇 위치, 경로) |
@@ -122,7 +122,7 @@ fire
 
 | 보고 싶은 것 | 명령 |
 | --- | --- |
-| 시나리오 1: 순찰 중 불 발견 | `fire noalarm` (불 위치를 정하려면 `fire noalarm stove_1`) |
+| 시나리오 1: 순찰 중 불 발견 | `fire noalarm` (다른 위치: `fire noalarm tv_stand`) |
 | 시나리오 2: 화재 경보 수신 | `fire` 실행 후 불이 나기 전에 키 창에서 `a` |
 | 시나리오 3: 충전 ↔ 순찰 | 순찰 중 `c` → 충전기 도착 후 `p` |
 
