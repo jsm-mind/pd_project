@@ -1,6 +1,9 @@
 # ===== (once) shortcut: type "fire" anywhere; also sources proj_ws in new terminals =====
 echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/install/setup.bash" >> ~/.bashrc && source ~/.bashrc
 
+http://192.168.219.198:8080
+pactl set-default-sink alsa_output.platform-3510000.hda.hdmi-stereo
+
 # ===== 119 call via Twilio (already set up) =====
 # credentials + verified number: ~/proj_ws/twilio.yaml (git-ignored)
 # address: src/home_robot_contact/config/contact.yaml
@@ -8,17 +11,20 @@ echo "alias fire='~/proj_ws/run.sh'" >> ~/.bashrc && echo "source ~/proj_ws/inst
 
 # ===== Run everything (one terminal) =====
 # Gazebo + robot + mode/fire+person detector/contact/guidance + Nav2/patrol/evacuation/suppression (after 15 s) + key window (xterm)
-# Patrol starts by itself once Nav2 is up; the fire breaks out 10-40 s after the patrol starts
-# the alarm in the fire's room rings by itself 10 s after the fire breaks out (scenario 2 if the robot has not seen the fire yet; ignored once in EMERGENCY)
+# Patrol starts by itself once Nav2 is up (spins 360 deg at each waypoint so the thermal camera sees all around); the fire breaks out 10-40 s after the patrol starts
+# the alarm in the fire's room starts sounding 5 s after the fire breaks out; the robot receives the alarm 10 s after (scenario 2 if the robot has not seen the fire yet; ignored once in EMERGENCY)
 # Scenario 1: robot finds the fire while patrolling -> 119 + contact -> resident search/evacuation -> suppression -> contact -> CHARGING, back to charger (all automatic)
 # Scenario 2: automatic alarm above, or press a (fire alarm) before the fire appears (it appears with the alarm) for a sure scenario 2 -> contact -> evacuation -> alarm room -> fire found: 119 + contact -> suppression -> contact -> back to charger
 # the aerosol is single-use: restart "fire" for the next demo (r: reset EMERGENCY -> CHARGING, robot returns to charger)
 # status ring on the robot top: blue patrol / white returning, charging / red fast blink 119+contact (3 s) / red search, to fire / green blink evacuation / purple blink aerosol / purple contact after suppression (3 s)
+# sounds: siren once on entering EMERGENCY (fades out at ~8 s) / smoke alarm loop (quiet) from 5 s after the fire (right away with key a) until the fire is extinguished
+#   volumes: src/home_robot_contact/home_robot_contact/sound.py params siren_volume 0.5, alarm_volume 0.3 (voice = 1.0)
 # keys in the xterm window: p: patrol, c: return to charger, a: ring fire alarm (room of the fire), r: reset emergency, q: quit
 fire                      # = ~/proj_ws/run.sh, random fire
 # fire tv_stand           # fire spot: stove_1 stove_2 tv_stand nightstand_bedroom1 nightstand_bedroom2 utility_room
 # fire build              # colcon build first, then run
 # fire build tv_stand
+# fire noalarm            # fire alarm broken: no alarm sound/signal -> robot must find the fire while patrolling (scenario 1 only; key a = fire breaks out now)
 # fire rviz               # also open RViz (map, robot pose, path); combine freely: fire build rviz tv_stand
 # fire call               # really dial the 119 stand-in number (demo); combine freely: fire build call tv_stand
 
@@ -57,6 +63,7 @@ cd ~/proj_ws && colcon build && source install/setup.bash
 cd ~/proj_ws && source install/setup.bash
 ros2 launch home_robot_description sim.launch.py            # random fire
 # ros2 launch home_robot_description sim.launch.py fire_spot:=tv_stand
+# ros2 launch home_robot_description sim.launch.py alarm:=false   # broken fire alarm (scenario 1 only)
 
 # ===== Terminal 2: mode manager + fire detector (thermal >= 80 C -> EMERGENCY) + contact (119 call / terminal) =====
 cd ~/proj_ws && source install/setup.bash

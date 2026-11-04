@@ -1,6 +1,6 @@
 """Patrol loop and autonomous return to the charger.
 
-PATROL      : visit waypoints in a loop.
+PATROL      : visit waypoints in a loop, spinning 360 deg at each (thermal looks all around).
 go_charge   : (event while PATROL) cancel patrol, drive to the charger;
               on arrival, force AMCL updates while stopped (it does not update
               without motion), then publish 'docked' if within dock_tolerance.
@@ -14,7 +14,7 @@ import math
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
-from nav2_msgs.action import NavigateToPose
+from nav2_msgs.action import NavigateToPose, Spin
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
@@ -34,6 +34,7 @@ class Patrol(Node):
         self.auto_start = self.declare_parameter('auto_start', True).value
 
         self.nav = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+        self.spin = ActionClient(self, Spin, 'spin')
         self.nomotion = self.create_client(Empty, 'request_nomotion_update')
         self.settle_timer = None
         self.settle_left = 0
@@ -46,6 +47,7 @@ class Patrol(Node):
         self.mode = None
         self.task = None        # 'patrol' | 'return' | None
         self.index = 0
+        self.spun = False       # spin done at the current waypoint
         self.goal_handle = None
         self.amcl_xy = None
         if self.auto_start:
@@ -87,6 +89,7 @@ class Patrol(Node):
     # ---------- navigation ----------
     def send_next(self):
         if self.task == 'patrol':
+            self.spun = False
             x, y, yaw = self.waypoints[self.index]
             self.get_logger().info(f'Waypoint {self.index}: ({x}, {y})')
         elif self.task == 'return':
@@ -122,6 +125,12 @@ class Patrol(Node):
             return
         self.goal_handle = None
         if task == 'patrol':
+            if not self.spun:
+                self.spun = True
+                self.spin.wait_for_server()
+                self.spin.send_goal_async(Spin.Goal(target_yaw=2 * math.pi)).add_done_callback(
+                    lambda f: self.on_accepted(f, task))
+                return
             self.index = (self.index + 1) % len(self.waypoints)
             self.send_next()
         else:

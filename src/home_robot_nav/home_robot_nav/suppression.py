@@ -29,7 +29,7 @@ from rclpy.duration import Duration  # noqa: E402
 from rclpy.node import Node  # noqa: E402
 from rclpy.qos import DurabilityPolicy, QoSProfile  # noqa: E402
 from rclpy.time import Time  # noqa: E402
-from std_msgs.msg import String  # noqa: E402
+from std_msgs.msg import Empty, String  # noqa: E402
 from tf2_ros import Buffer, TransformListener  # noqa: E402
 
 WORLD = '/world/fire_house_world'
@@ -49,6 +49,7 @@ class Suppression(Node):
         TransformListener(self.tf, self)
         self.status = self.create_publisher(String, 'suppression_status', 10)
         self.voice = self.create_publisher(String, 'voice', 10)
+        self.extinguished = self.create_publisher(Empty, 'fire_extinguished', 10)
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(PoseStamped, 'fire_location', self.on_fire, latched)
         self.create_subscription(String, 'suppression_request', self.on_request, 10)
@@ -143,6 +144,7 @@ class Suppression(Node):
 
     def fire_out(self):
         self.remove('fire')
+        self.extinguished.publish(Empty())
         self.get_logger().info('Fire extinguished')
 
     def cloud_gone(self):

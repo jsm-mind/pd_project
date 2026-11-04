@@ -1,16 +1,13 @@
 """Status ring on the top cover: emissive color and blinking follow the current mode/step.
 
-Input : /mode                (std_msgs/String, latched) - PATROL / CHARGING / EMERGENCY
-        /mode_event          (std_msgs/String) - 'go_charge' (returning to the charger)
-        /contact_request     (std_msgs/String) - 119 / contact step, 'notify_done'
-        /projector           (std_msgs/Bool)   - on while guiding the evacuation
-        /suppression_status  (std_msgs/String) - 'releasing' while the aerosol is out
+Input : /robot_status        (std_msgs/String, latched) - JSON from home_robot_mode robot_status
 Output: material of the ring visual via Gazebo UserCommands visual_config, sent only
         when the shown color changes (blink = one request per toggle, wall clock).
 """
 import os
 os.environ.setdefault('PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION', 'python')  # gz python msgs
 
+import json  # noqa: E402
 import time  # noqa: E402
 
 import rclpy  # noqa: E402
@@ -21,7 +18,7 @@ from gz.msgs10.visual_pb2 import Visual  # noqa: E402
 from gz.transport13 import Node as GzNode  # noqa: E402
 from rclpy.node import Node  # noqa: E402
 from rclpy.qos import DurabilityPolicy, QoSProfile  # noqa: E402
-from std_msgs.msg import Bool, String  # noqa: E402
+from std_msgs.msg import String  # noqa: E402
 
 WORLD = '/world/fire_house_world'
 MODEL = 'robot'
@@ -36,19 +33,20 @@ OFF = (0.1, 0.1, 0.1)         # blink off phase, close to the dark groove
 
 FAST = 0.15                   # fast blink: on/off half period [s]
 SLOW = 0.5                    # blink: on/off half period [s]
-ALERT_TIME = 3.0              # fast red blink after the emergency starts / a 119 contact [s]
-ALERT_REQUESTS = ('call_119', 'notify_fire', 'ask_check', 'notify_confirmed')
 
 # step -> (color, half period or None for steady)
 LOOKS = {
     'patrol': (BLUE, None),
-    'charging': (WHITE, None),           # returning to the charger / charging
-    'alert': (RED, FAST),                # 119 call, guardian/resident contact
-    'emergency': (RED, None),            # resident search / moving to the fire (alarm)
+    'returning': (WHITE, None),          # returning to the charger
+    'charging': (WHITE, None),
+    'report': (RED, FAST),               # 119 call, guardian/resident contact
+    'searching': (RED, None),            # resident search
+    'to_fire': (RED, None),              # moving to the fire (alarm)
     'guiding': (GREEN, SLOW),
     'suppressing': (PURPLE, SLOW),
     'done': (PURPLE, None),              # contact after suppression
 }
+ALERT_STAGES = ('report', 'searching', 'to_fire')   # a 119/contact alert shows fast red here
 
 
 class StatusRing(Node):
@@ -56,16 +54,9 @@ class StatusRing(Node):
         super().__init__('status_ring')
         self.gz = GzNode()
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(String, 'mode', self.on_mode, latched)
-        self.create_subscription(String, 'mode_event', self.on_event, 10)
-        self.create_subscription(String, 'contact_request', self.on_contact, 10)
-        self.create_subscription(Bool, 'projector', self.on_projector, 10)
-        self.create_subscription(String, 'suppression_status', self.on_suppression, 10)
+        self.create_subscription(String, 'robot_status', self.on_status, latched)
 
-        self.mode = 'CHARGING'
-        self.returning = False    # PATROL, driving back to the charger
-        self.step = None          # 'guiding' / 'suppressing' / 'done' inside EMERGENCY
-        self.alert_until = 0.0
+        self.stage = 'charging'
         self.look = None          # current entry of LOOKS
         self.since = 0.0          # start of the current look (blink phase)
         self.ring = None          # visual entity id
@@ -73,49 +64,19 @@ class StatusRing(Node):
         self.finder = self.create_timer(1.0, self.find_ring)
         self.create_timer(0.05, self.tick)
 
-    def on_mode(self, msg):
-        if msg.data == self.mode:
-            return
-        self.mode = msg.data
-        self.returning = False
-        self.step = None
-        if self.mode == 'EMERGENCY':
-            self.alert_until = time.monotonic() + ALERT_TIME
-
-    def on_event(self, msg):
-        if msg.data == 'go_charge' and self.mode == 'PATROL':
-            self.returning = True
-
-    def on_contact(self, msg):
-        if msg.data in ALERT_REQUESTS:
-            self.alert_until = time.monotonic() + ALERT_TIME
-        elif msg.data == 'notify_done':
-            self.step = 'done'
-
-    def on_projector(self, msg):
-        self.step = 'guiding' if msg.data else None
-
-    def on_suppression(self, msg):
-        if msg.data == 'releasing':
-            self.step = 'suppressing'
-
-    def state(self):
-        if self.mode == 'PATROL':
-            return 'charging' if self.returning else 'patrol'
-        if self.mode == 'EMERGENCY':
-            if self.step:
-                return self.step
-            return 'alert' if time.monotonic() < self.alert_until else 'emergency'
-        return 'charging'
+    def on_status(self, msg):
+        status = json.loads(msg.data)
+        alert = status['alert'] and status['stage'] in ALERT_STAGES
+        self.stage = 'report' if alert else status['stage']
 
     def tick(self):
         if self.ring is None:
             return
         now = time.monotonic()
-        look = LOOKS[self.state()]
+        look = LOOKS[self.stage]
         if look != self.look:
             self.look, self.since = look, now
-            self.get_logger().info(f'Ring: {self.state()}')
+            self.get_logger().info(f'Ring: {self.stage}')
         color, half = look
         if half is not None and int((now - self.since) / half) % 2:
             color = OFF

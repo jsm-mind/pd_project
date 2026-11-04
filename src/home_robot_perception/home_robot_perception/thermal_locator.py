@@ -17,7 +17,7 @@ from rclpy.time import Time
 from sensor_msgs.msg import Image, LaserScan
 from tf2_ros import Buffer, TransformListener
 
-HFOV = 0.9599            # thermal horizontal FOV [rad], must match the URDF
+HFOV = 1.9199            # thermal horizontal FOV [rad] (110 deg), must match the URDF
 WINDOW = 1.0             # bearing window for lidar matching [pixels]
 MAX_WAIT = 0.5           # drop queued images older than this vs latest TF [s]
 
@@ -76,8 +76,10 @@ class ThermalLocator:
         t_img = Time.from_msg(img.header.stamp).nanoseconds
         scan = min(self.scans,
                    key=lambda s: abs(Time.from_msg(s.header.stamp).nanoseconds - t_img))
-        pix = HFOV / img.width
-        bearing = ((img.width - 1) / 2 - col) * pix      # left positive
+        # pinhole: column offset is linear in tan(bearing), not in the angle (wide FOV)
+        focal = (img.width / 2) / math.tan(HFOV / 2)
+        bearing = math.atan(((img.width - 1) / 2 - col) / focal)      # left positive
+        pix = HFOV / img.width                                         # mean pixel width [rad]
 
         cam = self.pose('thermal_link', img.header.stamp)
         lid = self.pose(scan.header.frame_id, scan.header.stamp)

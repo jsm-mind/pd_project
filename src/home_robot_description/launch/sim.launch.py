@@ -11,7 +11,8 @@ def generate_launch_description():
     world = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('home_world'), 'launch', 'world.launch.py')),
-        launch_arguments={'fire_spot': LaunchConfiguration('fire_spot')}.items(),
+        launch_arguments={'fire_spot': LaunchConfiguration('fire_spot'),
+                          'alarm': LaunchConfiguration('alarm')}.items(),
     )
     robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
@@ -19,6 +20,7 @@ def generate_launch_description():
     )
     return LaunchDescription([
         DeclareLaunchArgument('fire_spot', default_value='random'),
+        DeclareLaunchArgument('alarm', default_value='true'),
         world,
         robot,
     ])

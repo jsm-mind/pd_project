@@ -25,13 +25,14 @@ def spawn_fire(context):
     if spot == 'random':
         spot = random.choice(list(FIRE_SPOTS))
     x, y, z = FIRE_SPOTS[spot]
+    alarm = LaunchConfiguration('alarm').perform(context).lower() == 'true'
     return [
         LogInfo(msg=f'Fire spot: {spot} ({x}, {y}, {z})'),
         # the fire breaks out during the patrol (or on the alarm key)
         Node(package='home_world', executable='fire_sim.py',
              parameters=[{'fire_spot': spot, 'position': [x, y, z]}], output='screen'),
         Node(package='home_world', executable='fire_alarm_sim.py',
-             parameters=[{'fire_spot': spot}], output='screen'),
+             parameters=[{'fire_spot': spot, 'working': alarm}], output='screen'),
     ]
 
 
@@ -49,6 +50,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('fire_spot', default_value='random',
                               choices=['random'] + list(FIRE_SPOTS)),
+        DeclareLaunchArgument('alarm', default_value='true',
+                              description='false: the fire alarm is broken (scenario 1 only)'),
         SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH',
                                models + os.pathsep + os.environ.get('GZ_SIM_RESOURCE_PATH', '')),
         SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH',

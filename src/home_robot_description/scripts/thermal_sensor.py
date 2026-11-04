@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Emulate a 32x24 MLX90640-class thermal array.
 
-Block-averages the 160x96 Gazebo thermal image (L16, kelvin / resolution)
+Block-averages the 224x120 Gazebo thermal image (L16, kelvin / resolution)
 into 32x24 and publishes temperatures in Celsius as a 32FC1 image.
 """
 import numpy as np

@@ -26,8 +26,10 @@ def generate_launch_description():
         DeclareLaunchArgument('fire_spot', default_value='random'),
         DeclareLaunchArgument('call', default_value='false'),
         DeclareLaunchArgument('rviz', default_value='false'),
+        DeclareLaunchArgument('alarm', default_value='true'),
         include('home_robot_description', 'sim.launch.py',
-                {'fire_spot': LaunchConfiguration('fire_spot')}),
+                {'fire_spot': LaunchConfiguration('fire_spot'),
+                 'alarm': LaunchConfiguration('alarm')}),
         include('home_robot_mode', 'mode.launch.py'),
         include('home_robot_contact', 'contact.launch.py', {'call': LaunchConfiguration('call')}),
         TimerAction(period=NAV_DELAY, actions=[

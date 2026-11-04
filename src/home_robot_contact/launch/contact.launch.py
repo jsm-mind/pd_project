@@ -20,9 +20,14 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('call', default_value='false',
                               description='true: really dial call_number'),
+        DeclareLaunchArgument('relay_port', default_value='8080',
+                              description='fire station relay screen port'),
         Node(package='home_robot_contact', executable='contact',
              parameters=params, output='screen', emulate_tty=True),
         Node(package='home_robot_contact', executable='guidance', output='screen', emulate_tty=True),
         Node(package='home_robot_contact', executable='status_ring', output='screen',
              emulate_tty=True),
+        Node(package='home_robot_contact', executable='sound', output='screen', emulate_tty=True),
+        Node(package='home_robot_contact', executable='control_relay', output='screen',
+             parameters=[{'port': ParameterValue(LaunchConfiguration('relay_port'), value_type=int)}]),
     ])

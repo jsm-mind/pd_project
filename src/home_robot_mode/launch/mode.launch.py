@@ -7,6 +7,7 @@ def generate_launch_description():
         Node(package='home_robot_mode', executable='mode_manager', output='screen'),
         Node(package='home_robot_mode', executable='alarm_receiver', output='screen'),
         Node(package='home_robot_mode', executable='scenario', output='screen'),
+        Node(package='home_robot_mode', executable='robot_status', output='screen'),
         Node(package='home_robot_perception', executable='fire_detector', output='screen'),
         Node(package='home_robot_perception', executable='person_detector', output='screen'),
     ])

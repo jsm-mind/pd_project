@@ -364,7 +364,7 @@
     <origin xyz="0 0 ${body_h / 2 + 0.02}"/>
   </joint>
 
-  <!-- 32x24 thermal array (MLX90640, 55x35 deg) high on front face, tilted 15 deg down
+  <!-- 32x24 thermal array (MLX90640 wide-angle BAB, 110x75 deg) high on front face, tilted 15 deg down
        to see over beds/sofas and the floor beside furniture -->
   <link name="thermal_link">
     <visual>
@@ -403,9 +403,9 @@
     </sensor>
   </gazebo>
 
-  <!-- Rendered at 160x96 and block-averaged (5x4) to 32x24 by thermal_sensor.py,
+  <!-- Rendered at 224x120 and block-averaged (7x5) to 32x24 by thermal_sensor.py,
        because a thermal camera samples only pixel centers.
-       Gazebo pixels are square, so 160x96 gives 55 x 34.7 deg (spec 55 x 35). -->
+       Gazebo pixels are square, so 224x120 gives 110 x 74.8 deg (spec 110 x 75). -->
   <gazebo reference="thermal_link">
     <sensor name="thermal" type="thermal">
       <topic>thermal/image_full</topic>
@@ -413,8 +413,8 @@
       <update_rate>8</update_rate>
       <always_on>true</always_on>
       <camera>
-        <horizontal_fov>0.9599</horizontal_fov>
-        <image><width>160</width><height>96</height><format>L16</format></image>
+        <horizontal_fov>1.9199</horizontal_fov>
+        <image><width>224</width><height>120</height><format>L16</format></image>
         <clip><near>0.05</near><far>20</far></clip>
       </camera>
       <plugin filename="gz-sim-thermal-sensor-system" name="gz::sim::systems::ThermalSensor">

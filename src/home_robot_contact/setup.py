@@ -14,6 +14,8 @@ setup(
         ('share/' + package_name + '/config', ['config/contact.yaml']),
         ('share/' + package_name + '/launch', ['launch/contact.launch.py']),
         ('share/' + package_name + '/voice', glob('voice/*.wav')),
+        ('share/' + package_name + '/sound', glob('sound/*.wav')),
+        ('share/' + package_name + '/web', ['web/control_relay.html']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -26,6 +28,8 @@ setup(
             'contact = home_robot_contact.contact:main',
             'guidance = home_robot_contact.guidance:main',
             'status_ring = home_robot_contact.status_ring:main',
+            'control_relay = home_robot_contact.control_relay:main',
+            'sound = home_robot_contact.sound:main',
         ],
     },
 )

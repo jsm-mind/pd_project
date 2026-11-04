@@ -5,10 +5,14 @@ One alarm per room, on the ceiling above open floor (map frame), so the robot
 can stand under it. The alarm in the room of the spawned fire spot rings
 alarm_delay s after the fire breaks out (time for the smoke to reach it; the
 smoke itself is not simulated), or right away when triggered by hand.
+With working:=false the alarm is broken and never sounds or signals.
 
 Input : /fire_started       (std_msgs/Empty) - from fire_sim
         /fire_alarm_trigger (std_msgs/Empty) - from the key window ('a')
-Output: /fire_alarm (geometry_msgs/PoseStamped, map) - ringing alarm's position
+Output: /fire_alarm_sound (std_msgs/Empty) - the alarm starts sounding, sound_delay s
+                                            after the fire (right away by hand)
+        /fire_alarm (geometry_msgs/PoseStamped, map) - ringing alarm's position, sent to
+                                            the robot alarm_delay s after the fire
 """
 import rclpy
 from geometry_msgs.msg import PoseStamped
@@ -39,16 +43,35 @@ class FireAlarmSim(Node):
         super().__init__('fire_alarm_sim')
         self.room = SPOT_ROOM[self.declare_parameter('fire_spot', 'tv_stand').value]
         self.alarm_delay = self.declare_parameter('alarm_delay', 10.0).value
+        self.sound_delay = self.declare_parameter('sound_delay', 5.0).value
+        # false: broken alarm - never sounds or signals (the robot must find the fire)
+        self.working = self.declare_parameter('working', True).value
         self.pub = self.create_publisher(PoseStamped, 'fire_alarm', 10)
+        self.sound_pub = self.create_publisher(Empty, 'fire_alarm_sound', 10)
         self.create_subscription(Empty, 'fire_alarm_trigger', self.on_trigger, 10)
         self.create_subscription(Empty, 'fire_started', self.on_fire, 10)
         self.timer = None
+        self.sound_timer = None
         self.rang = False
+        self.sounded = False
+        if not self.working:
+            self.get_logger().warn(f'Fire alarm in {self.room} is broken (no sound, no signal)')
 
     def on_fire(self, _):
-        if self.timer is None:
+        if self.working and self.timer is None:
             self.get_logger().info(f'Smoke spreading; alarm in {self.room} rings in {self.alarm_delay:.0f} s')
             self.timer = self.create_timer(self.alarm_delay, self.on_delay)
+            self.sound_timer = self.create_timer(self.sound_delay, self.on_sound_delay)
+
+    def on_sound_delay(self):
+        self.sound_timer.cancel()
+        if not self.sounded:
+            self.get_logger().info(f'Alarm in {self.room} sounding')
+            self.sound()
+
+    def sound(self):
+        self.sounded = True
+        self.sound_pub.publish(Empty())
 
     def on_delay(self):
         self.timer.cancel()
@@ -56,6 +79,10 @@ class FireAlarmSim(Node):
             self.on_trigger(None)
 
     def on_trigger(self, _):
+        if not self.working:
+            return
+        if not self.sounded:
+            self.sound()
         self.rang = True
         x, y = ALARMS[self.room]
         msg = PoseStamped()
