@@ -29,6 +29,8 @@ evacuation:
     exit: [4.2, 1.55, -1.57]   # living room floor just before the genkan step, facing the front door
                                # (genkan is keepout in the map); the resident walks on out to the assembly point
     approach_dist: 1.0
+    turn_clearance: 0.25       # [m] approach stop: no inscribed/lethal costmap cell this close to its
+                               # center (robot center >= ~0.47 m from obstacles, room to turn and leave)
     voice_period: 8.0
     guide_speed: 0.8           # [m/s] while leading the resident (search: full speed)
 

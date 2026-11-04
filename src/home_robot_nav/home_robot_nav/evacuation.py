@@ -3,7 +3,9 @@
 /evacuation_request 'start':
   SEARCH   visit search points (nearest first), spin 360 deg at each,
            until /person_location arrives
-  APPROACH drive to approach_dist in front of the resident (skipped if closer)
+  APPROACH drive to approach_dist in front of the resident, backing off along the
+           line toward the robot until the stop has turn_clearance free in the
+           global costmap (skipped if closer or no such stop)
   GUIDE    voice + floor arrow on, resident follows, drive to the exit at
            guide_speed (Nav2 speed limit; search runs at full speed)
   done     voice, arrow off, /evacuation_status 'done'
@@ -17,6 +19,7 @@ from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PointStamped, PoseStamped
 from nav2_msgs.action import NavigateToPose, Spin
 from nav2_msgs.msg import SpeedLimit
+from nav_msgs.msg import OccupancyGrid
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
 from rclpy.node import Node
@@ -39,6 +42,7 @@ class Evacuation(Node):
         self.approach_dist = self.declare_parameter('approach_dist', 1.0).value
         self.voice_period = self.declare_parameter('voice_period', 8.0).value
         self.guide_speed = self.declare_parameter('guide_speed', 0.8).value
+        self.turn_clearance = self.declare_parameter('turn_clearance', 0.25).value
 
         self.nav = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.spin = ActionClient(self, Spin, 'spin')
@@ -51,14 +55,19 @@ class Evacuation(Node):
         self.speed_limit = self.create_publisher(SpeedLimit, 'speed_limit', 10)
         self.create_subscription(String, 'evacuation_request', self.on_request, 10)
         self.create_subscription(PointStamped, 'person_location', self.on_person, 10)
+        self.create_subscription(OccupancyGrid, 'global_costmap/costmap', self.on_costmap, 1)
 
         self.state = None       # 'search' | 'approach' | 'guide' | None
         self.queue = []
         self.guide_tries = 0
         self.goal_handle = None
         self.voice_timer = None
+        self.costmap = None
 
     # ---------- inputs ----------
+    def on_costmap(self, msg):
+        self.costmap = msg
+
     def on_request(self, msg):
         if msg.data != 'start' or self.state is not None:
             return
@@ -77,15 +86,19 @@ class Evacuation(Node):
             return
         self.get_logger().info(f'Resident found at ({person[0]:.2f}, {person[1]:.2f})')
         d = math.dist(person, robot)
-        if d <= self.approach_dist:
-            self.state = 'approach'
+        self.state = 'approach'
+        # stop on the robot-person line, backed off toward the robot until there is room to turn
+        s = d - self.approach_dist
+        while s > 0 and not self.has_room(robot[0] + (person[0] - robot[0]) * s / d,
+                                          robot[1] + (person[1] - robot[1]) * s / d):
+            s -= 0.1
+        if s <= 0:
             self.cancel(then=self.start_guide)
             return
-        self.state = 'approach'
-        k = (d - self.approach_dist) / d
-        x = robot[0] + (person[0] - robot[0]) * k
-        y = robot[1] + (person[1] - robot[1]) * k
+        x = robot[0] + (person[0] - robot[0]) * s / d
+        y = robot[1] + (person[1] - robot[1]) * s / d
         yaw = math.atan2(person[1] - robot[1], person[0] - robot[0])
+        self.get_logger().info(f'Approach stop ({x:.2f}, {y:.2f})')
         self.cancel(then=lambda: self.go(NavigateToPose, (x, y, yaw), 'approach'))
 
     # ---------- steps ----------
@@ -180,6 +193,24 @@ class Evacuation(Node):
             handle.get_result_async().add_done_callback(lambda _: then())
         else:
             then()
+
+    def has_room(self, x, y):
+        # no inscribed/lethal cell (OccupancyGrid >= 99) within turn_clearance of (x, y)
+        m = self.costmap
+        if m is None:
+            return True
+        res, w, h = m.info.resolution, m.info.width, m.info.height
+        ci = int((x - m.info.origin.position.x) / res)
+        cj = int((y - m.info.origin.position.y) / res)
+        n = int(self.turn_clearance / res)
+        for dj in range(-n, n + 1):
+            for di in range(-n, n + 1):
+                if di * di + dj * dj > n * n:
+                    continue
+                i, j = ci + di, cj + dj
+                if not (0 <= i < w and 0 <= j < h) or m.data[j * w + i] >= 99:
+                    return False
+        return True
 
     def set_speed(self, limit):
         # absolute [m/s]; 0 removes the limit
