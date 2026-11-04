@@ -2,7 +2,8 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -12,6 +13,17 @@ def generate_launch_description():
     pkg = get_package_share_directory('home_robot_description')
     xacro_file = os.path.join(pkg, 'urdf', 'robot.urdf.xacro')
     robot_description = ParameterValue(Command(['xacro ', xacro_file]), value_type=str)
+    # spawn only after the GUI has loaded the world, or the GUI never draws the robot
+    wait_gui = Node(package='home_robot_description', executable='wait_for_gui.py',
+                    output='screen')
+    create = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=['-name', 'robot', '-topic', 'robot_description',
+                   '-x', LaunchConfiguration('x'), '-y', LaunchConfiguration('y'),
+                   '-z', LaunchConfiguration('z'), '-Y', LaunchConfiguration('yaw')],
+        output='screen',
+    )
 
     return LaunchDescription([
         # Default spawn pose: on the charging pad
@@ -25,14 +37,8 @@ def generate_launch_description():
             parameters=[{'robot_description': robot_description, 'use_sim_time': True}],
             output='screen',
         ),
-        Node(
-            package='ros_gz_sim',
-            executable='create',
-            arguments=['-name', 'robot', '-topic', 'robot_description',
-                       '-x', LaunchConfiguration('x'), '-y', LaunchConfiguration('y'),
-                       '-z', LaunchConfiguration('z'), '-Y', LaunchConfiguration('yaw')],
-            output='screen',
-        ),
+        wait_gui,
+        RegisterEventHandler(OnProcessExit(target_action=wait_gui, on_exit=[create])),
         Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',

@@ -9,6 +9,7 @@
 #include <gz/plugin/Register.hh>
 #include <gz/sim/Actor.hh>
 #include <gz/sim/System.hh>
+#include <gz/sim/components/Actor.hh>
 
 namespace home_world
 {
@@ -44,8 +45,12 @@ public:
       moved_at_ = now;
     }
     const std::string &want = (now - moved_at_ > still_time_) ? standing_ : walking_;
-    if (actor_.AnimationName(_ecm) != want)
+    if (actor_.AnimationName(_ecm) != want) {
       actor_.SetAnimationName(_ecm, want);
+      // SetAnimationName does not mark the change, so the GUI would keep the old animation
+      _ecm.SetChanged(actor_.Entity(), gz::sim::components::AnimationName::typeId,
+                      gz::sim::ComponentState::OneTimeChange);
+    }
   }
 
 private:

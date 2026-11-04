@@ -32,7 +32,7 @@ evacuation:
     turn_clearance: 0.25       # [m] approach stop: no inscribed/lethal costmap cell this close to its
                                # center (robot center >= ~0.47 m from obstacles, room to turn and leave)
     voice_period: 8.0
-    guide_speed: 0.8           # [m/s] while leading the resident (search: full speed)
+    guide_speed: 0.6           # [m/s] while leading the resident (search: full speed 0.7)
 
 suppression:
   ros__parameters:
