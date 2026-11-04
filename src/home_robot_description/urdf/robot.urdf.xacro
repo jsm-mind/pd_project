@@ -33,6 +33,7 @@
 
   <material name="body_white"><color rgba="0.92 0.92 0.90 1"/></material>
   <material name="dark"><color rgba="0.15 0.15 0.15 1"/></material>
+  <material name="towel_white"><color rgba="0.98 0.98 0.98 1"/></material>
   <material name="red"><color rgba="0.85 0.12 0.10 1"/></material>
   <material name="orange"><color rgba="0.95 0.55 0.10 1"/></material>
   <material name="blue"><color rgba="0.10 0.45 0.90 1"/></material>
@@ -206,23 +207,46 @@
   <xacro:caster pos="front" x="${caster_x}"/>
   <xacro:caster pos="rear" x="${-caster_x}"/>
 
-  <!-- ===== Towel storage (rear, with lid) ===== -->
+  <!-- ===== Towel storage (rear pouch, open top) =====
+       Cylinder r 0.10 centered 0.14 m behind the axis: the part inside the body is hidden,
+       so the pouch hugs the body curve, ~0.20 m wide, 0.07 m out (rear edge r 0.24).
+       White towel ends stick out of the top. Visual only. -->
   <link name="storage_link">
     <visual>
-      <geometry><box size="0.06 0.20 0.14"/></geometry>
+      <geometry><cylinder radius="0.10" length="0.18"/></geometry>
       <material name="orange"/>
-    </visual>
-    <visual>
-      <origin xyz="0.0 0 0.075"/>
-      <geometry><box size="0.07 0.21 0.012"/></geometry>
-      <material name="dark"/>
     </visual>
   </link>
   <joint name="storage_joint" type="fixed">
     <parent link="base_link"/>
     <child link="storage_link"/>
-    <origin xyz="${-body_r + 0.01} 0 0.0"/>
+    <origin xyz="-0.14 0 0.0"/>
   </joint>
+  <!-- own link + gazebo material: the URDF->SDF converter only colors a link's first visual -->
+  <link name="towel_link">
+    <visual>
+      <origin xyz="-0.05 0 0.085"/>
+      <geometry><box size="0.03 0.14 0.09"/></geometry>
+      <material name="towel_white"/>
+    </visual>
+    <visual>
+      <origin xyz="-0.075 0 0.08"/>
+      <geometry><box size="0.025 0.09 0.08"/></geometry>
+      <material name="towel_white"/>
+    </visual>
+  </link>
+  <joint name="towel_joint" type="fixed">
+    <parent link="storage_link"/>
+    <child link="towel_link"/>
+  </joint>
+  <gazebo reference="towel_link">
+    <visual>
+      <material>
+        <ambient>0.98 0.98 0.98 1</ambient>
+        <diffuse>0.98 0.98 0.98 1</diffuse>
+      </material>
+    </visual>
+  </gazebo>
 
   <!-- ===== Solid aerosol unit (single-use, electrically ignited) =====
        Generator canister sits inside the body; outlet grille on the top front.
