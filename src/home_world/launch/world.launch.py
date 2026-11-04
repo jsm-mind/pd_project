@@ -1,7 +1,7 @@
 import os
 import random
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
                             LogInfo, OpaqueFunction, SetEnvironmentVariable)
@@ -51,6 +51,9 @@ def generate_launch_description():
                               choices=['random'] + list(FIRE_SPOTS)),
         SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH',
                                models + os.pathsep + os.environ.get('GZ_SIM_RESOURCE_PATH', '')),
+        SetEnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH',
+                               os.path.join(get_package_prefix('home_world'), 'lib') + os.pathsep
+                               + os.environ.get('GZ_SIM_SYSTEM_PLUGIN_PATH', '')),
         gz_sim,
         OpaqueFunction(function=spawn_fire),
         Node(package='home_world', executable='resident_sim.py', output='screen'),

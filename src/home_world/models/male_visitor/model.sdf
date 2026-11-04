@@ -10,6 +10,11 @@
       <scale>1.0</scale>
       <interpolate_x>true</interpolate_x>
     </animation>
+    <!-- Upright pose built from the walk data by tools/make_stand_pose.py -->
+    <animation name="standing">
+      <filename>meshes/MaleVisitorStand.dae</filename>
+      <scale>1.0</scale>
+    </animation>
     <!-- Walks to resident_anchor (moved by resident_sim) -->
     <plugin filename="gz-sim-follow-actor-system" name="gz::sim::systems::FollowActor">
       <target>resident_anchor</target>
@@ -17,6 +22,11 @@
       <max_distance>100</max_distance>
       <velocity>1.0</velocity>
       <animation>walking</animation>
+    </plugin>
+    <!-- Stands upright while FollowActor keeps it still -->
+    <plugin filename="actor_stand" name="home_world::ActorStand">
+      <walking>walking</walking>
+      <standing>standing</standing>
     </plugin>
   </actor>
 </sdf>
