@@ -28,6 +28,7 @@ from tf2_ros import Buffer, TransformListener  # noqa: E402
 
 PERIOD = 0.1
 SET_POSE = '/world/fire_house_world/set_pose'
+KEEP_WALKING = '/resident_keep_walking'   # actor_stand: walk in place while following
 HIDDEN_Z = -5.0
 
 
@@ -40,6 +41,7 @@ class ResidentSim(Node):
         self.speed = self.declare_parameter('speed', 1.0).value
         self.floor_z = self.declare_parameter('floor_z', 0.1).value
         self.gz = GzNode()
+        self.keep_walking = self.gz.advertise(KEEP_WALKING, Boolean)
         self.tf = Buffer()
         TransformListener(self.tf, self)
         self.create_subscription(Bool, 'resident_follow', self.on_follow, 10)
@@ -58,6 +60,7 @@ class ResidentSim(Node):
             self.state = 'leave'
 
     def step(self):
+        self.keep_walking.publish(Boolean(data=self.state == 'follow'))
         if self.state == 'follow':
             target = self.follow_target()
         elif self.state == 'leave':
