@@ -16,6 +16,9 @@ def generate_launch_description():
             'map': os.path.join(pkg, 'maps', 'house.yaml'),
             'params_file': os.path.join(pkg, 'config', 'nav2_params.yaml'),
             'use_sim_time': 'true',
+            # hide only the BT "tick rate exceeded" warnings (CPU-load notice, harmless);
+            # all other nodes stay at the default info level
+            'log_level': 'BehaviorTreeEngine:=error',
         }.items(),
     )
     patrol = Node(

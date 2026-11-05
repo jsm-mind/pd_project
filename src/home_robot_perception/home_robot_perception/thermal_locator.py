@@ -8,6 +8,8 @@ their stamp (waiting inside a callback would block TF reception).
 Usage: ThermalLocator(node, on_image) subscribes /thermal/image and /scan and
 calls on_image(img) for each image once TF covers it; locate(img, col)
 returns the (x, y) map point at that column, or None.
+locate(img, col, farthest=True) takes the farthest ray within the +-1 pixel
+window instead: a fire seen past a door edge is not placed on the door frame.
 """
 import math
 from collections import deque
@@ -70,7 +72,7 @@ class ThermalLocator:
             return None
         return t.transform.translation.x, t.transform.translation.y, yaw_of(t.transform.rotation)
 
-    def locate(self, img, col):
+    def locate(self, img, col, farthest=False):
         if not self.scans:
             return None
         t_img = Time.from_msg(img.header.stamp).nanoseconds
@@ -98,5 +100,9 @@ class ThermalLocator:
         sel = np.abs(b) <= WINDOW * pix
         if not sel.any():
             return None
+        if farthest:
+            # farthest ray in the +-1 pixel window: passes a door edge to the fire
+            i = np.argmax(r[sel])
+            return float(px[sel][i]), float(py[sel][i])
         i = np.argmin(np.abs(b[sel]))      # ray closest to the bearing
         return float(px[sel][i]), float(py[sel][i])

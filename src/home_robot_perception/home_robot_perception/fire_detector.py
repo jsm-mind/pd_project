@@ -4,8 +4,8 @@ Input : /thermal/image (32FC1, Celsius), /scan, TF, /mode
         /fire_check 'start' | 'stop' - also detect once in EMERGENCY (scenario 2)
 Output: /mode_event 'fire_detected' (once, in PATROL or CHARGING; not for /fire_check)
         /fire_location (geometry_msgs/PoseStamped, transient_local) -
-        fire position in the map: hottest pixel's bearing + lidar range
-        (ThermalLocator); robot position if the lidar match fails
+        fire position in the map: hottest pixel's bearing + farthest lidar range
+        within +-1 pixel (ThermalLocator); robot position if the lidar match fails
         /fire_seen (std_msgs/Float32) - peak Celsius, the first time a fire is in
         view during each EMERGENCY (any step; for the relay screen alert)
 """
@@ -66,7 +66,7 @@ class FireDetector(Node):
         self.sent = True
         self.get_logger().info(
             f'FIRE detected: {peak:.1f} C at pixel (col {col}, row {row}) in {self.mode}')
-        xy = self.locator.locate(msg, col)
+        xy = self.locator.locate(msg, col, farthest=True)
         if xy is None:
             robot = self.locator.pose('base_footprint', msg.header.stamp)
             xy = robot[:2] if robot else None
