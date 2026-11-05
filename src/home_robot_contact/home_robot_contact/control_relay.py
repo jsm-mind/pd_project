@@ -5,11 +5,13 @@ Only during EMERGENCY are the position, thermal image, map and log sent;
 otherwise clients get {'standby': true} only.
 
 Input : /robot_status  (std_msgs/String, latched) - JSON from home_robot_mode robot_status
-        /thermal/image (sensor_msgs/Image 32FC1, 32x24 Celsius)
+        /thermal/image_full (sensor_msgs/Image, 224x120 Gazebo render, kelvin / 0.1) -
+            shown on screen; detection still uses the 32x24 /thermal/image
+        /guardian_message (std_msgs/String) - JSON {title, text, address} from contact
         TF map -> base_footprint
 HTTP  : GET /        page (web/control_relay.html)
         GET /map     house map (pgm pixels, base64) - 403 outside EMERGENCY
-        GET /events  text/event-stream: status, log, pose (pose_rate), thermal (thermal_rate), hb
+        GET /events  text/event-stream: status, log, sms, pose (pose_rate), thermal (thermal_rate), hb
 """
 import base64
 import json
@@ -32,6 +34,7 @@ from std_msgs.msg import String
 from tf2_ros import Buffer, TransformListener
 
 HEARTBEAT = 2.0     # [s] lets the page show the link as up while on standby
+GZ_RESOLUTION = 0.1  # kelvin per count of the Gazebo thermal image (URDF <resolution>)
 
 
 def load_map(yaml_path):
@@ -75,7 +78,8 @@ class ControlRelay(Node):
         TransformListener(self.tf, self)
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, 'robot_status', self.on_status, latched)
-        self.create_subscription(Image, 'thermal/image', self.on_thermal, 10)
+        self.create_subscription(Image, 'thermal/image_full', self.on_thermal, 10)
+        self.create_subscription(String, 'guardian_message', self.on_guardian, 10)
         self.create_timer(1.0 / pose_rate, self.send_pose)
         self.create_timer(1.0 / thermal_rate, self.send_thermal)
         self.create_timer(HEARTBEAT, lambda: self.broadcast('hb', {}))
@@ -85,6 +89,7 @@ class ControlRelay(Node):
         self.emergency = False
         self.status = {'standby': True}
         self.log = []             # events of the current emergency
+        self.sms = []             # guardian messages of the current emergency
         self.start = 0.0
         self.thermal = None       # latest image, converted only when sent
 
@@ -102,6 +107,7 @@ class ControlRelay(Node):
             self.start = time.time()
             with self.lock:
                 self.log = []
+                self.sms = []
         self.emergency = emergency
         self.status = status if emergency else {'standby': True}
         self.broadcast('status', self.snapshot())
@@ -112,6 +118,16 @@ class ControlRelay(Node):
             with self.lock:     # no new client between the two, or it gets this entry twice
                 self.log.append(entry)
                 self.broadcast('log', entry)
+
+    def on_guardian(self, msg):
+        if not self.emergency:
+            return
+        now = time.time()
+        entry = dict(json.loads(msg.data), t=now - self.start,
+                     clock=time.strftime('%H:%M', time.localtime(now)))
+        with self.lock:
+            self.sms.append(entry)
+            self.broadcast('sms', entry)
 
     def snapshot(self):
         # elapsed lets a page opened mid-emergency show the same T+ as the log
@@ -139,7 +155,11 @@ class ControlRelay(Node):
         msg = self.thermal
         if not self.emergency or msg is None:
             return
-        temp = np.frombuffer(msg.data, np.float32).reshape(msg.height, msg.width)
+        if msg.encoding == '32FC1':
+            temp = np.frombuffer(msg.data, np.float32).reshape(msg.height, msg.width)
+        else:   # 16-bit Gazebo thermal render
+            raw = np.frombuffer(msg.data, np.uint16).reshape(msg.height, msg.width)
+            temp = raw.astype(np.float32) * GZ_RESOLUTION - 273.15
         lo, hi = float(temp.min()), float(temp.max())
         level = np.round((temp - lo) / max(hi - lo, 1e-3) * 255).astype(np.uint8)
         self.broadcast('thermal', {'w': msg.width, 'h': msg.height, 'min': round(lo, 1),
@@ -192,6 +212,8 @@ class ControlRelay(Node):
                     q.put(f'event: status\ndata: {json.dumps(relay.snapshot(), ensure_ascii=False)}\n\n'.encode())
                     for entry in (relay.log if relay.emergency else []):
                         q.put(f'event: log\ndata: {json.dumps(entry, ensure_ascii=False)}\n\n'.encode())
+                    for entry in (relay.sms if relay.emergency else []):
+                        q.put(f'event: sms\ndata: {json.dumps(entry, ensure_ascii=False)}\n\n'.encode())
                     relay.streams.append(q)
                 try:
                     while True:

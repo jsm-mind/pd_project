@@ -9,8 +9,9 @@ Input : /mode                (std_msgs/String, latched) - PATROL / CHARGING / EM
         /evacuation_status   (std_msgs/String) - 'done' / 'not_found' / 'failed'
         /fire_location       (geometry_msgs/PoseStamped, latched) - fire seen
         /suppression_status  (std_msgs/String) - 'releasing' / 'done'
+        /fire_seen           (std_msgs/Float32) - first fire in view this emergency
 Output: /robot_status (std_msgs/String, latched) - JSON, on every change:
-        mode, stage, alert, cause, fire, resident, called_119,
+        mode, stage, alert, cause, fire, fire_seen, resident, called_119,
         event: [level, text] that caused this update, or null
 stage : patrol / returning / charging /
         report -> searching -> guiding -> to_fire -> suppressing -> done (EMERGENCY)
@@ -23,7 +24,7 @@ import rclpy
 from geometry_msgs.msg import PointStamped, PoseStamped
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, Float32, String
 
 ALERT_TIME = 3.0
 CAUSES = {
@@ -57,6 +58,7 @@ class RobotStatus(Node):
         self.create_subscription(String, 'evacuation_status', self.on_evacuation, 10)
         self.create_subscription(PoseStamped, 'fire_location', self.on_fire, latched)
         self.create_subscription(String, 'suppression_status', self.on_suppression, 10)
+        self.create_subscription(Float32, 'fire_seen', self.on_fire_seen, 10)
 
         self.mode = 'CHARGING'
         self.stage = 'charging'
@@ -70,6 +72,7 @@ class RobotStatus(Node):
         self.fire = None          # 'alarm' (not seen yet) | 'burning' | 'suppressing' | 'out'
         self.resident = None      # 'found' | 'guiding' | 'evacuated' | 'not_found' | 'failed'
         self.called_119 = False
+        self.fire_seen = False
 
     # ---------- inputs ----------
     def on_mode(self, msg):
@@ -137,6 +140,14 @@ class RobotStatus(Node):
             self.fire = 'burning'
             self.publish(('crit', '열화상으로 화재 확인'))
 
+    def on_fire_seen(self, msg):
+        if self.mode != 'EMERGENCY' or self.fire_seen:
+            return
+        self.fire_seen = True
+        if self.fire == 'alarm':
+            self.fire = 'burning'
+        self.publish(('crit', f'열화상으로 화재 발견 ({msg.data:.0f}℃)'))
+
     def on_suppression(self, msg):
         if self.mode != 'EMERGENCY':
             return
@@ -162,7 +173,8 @@ class RobotStatus(Node):
         status = {
             'mode': self.mode, 'stage': self.stage, 'alert': self.alert,
             'cause': self.cause if self.mode == 'EMERGENCY' else None,
-            'fire': self.fire, 'resident': self.resident, 'called_119': self.called_119,
+            'fire': self.fire, 'fire_seen': self.fire_seen,
+            'resident': self.resident, 'called_119': self.called_119,
             'event': event,
         }
         self.pub.publish(String(data=json.dumps(status, ensure_ascii=False)))

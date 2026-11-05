@@ -3,10 +3,14 @@
 Input : /contact_request (std_msgs/String) - request names in MESSAGES or 'call_119'
         /fire_location   (PoseStamped, transient_local) - shown in messages
         /alarm_location  (PoseStamped, transient_local) - shown when no fire location yet
+        /fire_seen       (std_msgs/Float32) - first fire sighting: relay-screen SMS only
 Output: Twilio call to call_number (or a log line when call_enabled is false),
         boxed messages on the terminal
+        /guardian_message (std_msgs/String) - JSON {title, text, address} of each
+        terminal message, shown as an SMS on the relay page
 """
 import base64
+import json
 import threading
 import urllib.error
 import urllib.parse
@@ -17,7 +21,7 @@ import rclpy
 from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
-from std_msgs.msg import String
+from std_msgs.msg import Float32, String
 
 TWILIO_URL = 'https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json'
 # Trial accounts reject the inline 'Twiml' parameter, so the TwiML is served
@@ -30,6 +34,10 @@ MESSAGES = {
     'ask_check': '화재 경보가 울렸습니다. 현장 확인을 부탁드립니다.',
     'notify_confirmed': '화재가 확인되었습니다. 119에 신고했습니다. 즉시 대피하세요.',
     'notify_done': '화재 진압을 완료했습니다.',
+}
+TITLES = {
+    'notify_fire': '화재 발생', 'ask_check': '확인 요청',
+    'notify_confirmed': '화재 확인', 'notify_done': '진압 완료',
 }
 
 
@@ -45,9 +53,11 @@ class Contact(Node):
 
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.voice = self.create_publisher(String, 'voice', 10)
+        self.guardian = self.create_publisher(String, 'guardian_message', 10)
         self.create_subscription(String, 'contact_request', self.on_request, 10)
         self.create_subscription(PoseStamped, 'fire_location', self.on_location, latched)
         self.create_subscription(PoseStamped, 'alarm_location', self.on_alarm, latched)
+        self.create_subscription(Float32, 'fire_seen', self.on_fire_seen, 10)
         self.location = None
         self.alarm = None
 
@@ -58,6 +68,12 @@ class Contact(Node):
     def on_alarm(self, msg):
         self.alarm = (msg.pose.position.x, msg.pose.position.y)
 
+    def on_fire_seen(self, msg):
+        # screen-only SMS; the terminal contact flow stays as it is
+        self.guardian.publish(String(data=json.dumps(
+            {'title': '화재 발견', 'text': f'HOLMES가 열화상으로 화재를 발견했습니다. ({msg.data:.0f}℃)',
+             'address': self.address}, ensure_ascii=False)))
+
     def on_request(self, msg):
         self.dispatch(msg.data)
 
@@ -67,6 +83,9 @@ class Contact(Node):
             self.say('called_119')
         elif request in MESSAGES:
             self.notify(MESSAGES[request])
+            self.guardian.publish(String(data=json.dumps(
+                {'title': TITLES[request], 'text': MESSAGES[request], 'address': self.address},
+                ensure_ascii=False)))
             # only the fact of the contact is announced, not its content
             self.say('asked_check' if request == 'ask_check' else 'notified_guardian')
         else:
