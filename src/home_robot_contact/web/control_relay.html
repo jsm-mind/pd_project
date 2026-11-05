@@ -1,43 +1,45 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>파이어 도그 관제 중계</title>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>임시 소방서 상황실</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Barlow+Condensed:wght@600&display=swap">
 <style>
 /* Layout: 상단 중계 상태 → 요약 칩 + 단계 → 영상 | 도면 → 텔레메트리 | 이벤트 로그 */
 :root{
   --bg:#0e1316; --panel:#141b20; --panel-2:#1a232a; --line:#263139;
-  --fg:#e6edf0; --muted:#8a9aa4; --accent:#5cc8d6; --accent-soft:#14333a;
-  --ok:#5fcf8b; --warn:#f0b24a; --crit:#ff6a55;
-  --ok-soft:#14301f; --warn-soft:#3a2d12; --crit-soft:#3d1a15;
+  --fg:#e6edf0; --muted:#8a9aa4; --accent:#6cb0ff; --accent-soft:#14283f;
+  --ok:#5fcf8b; --warn:#6cb0ff; --crit:#ff6a55;
+  --ok-soft:#14301f; --warn-soft:#14283f; --crit-soft:#3d1a15;
   --floor:#10171b; --wall:#6b7c86; --room:#162026;
   --font-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --font-data:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --band:#12233b; --band-2:#0b1828; --band-fg:#eaf1fb; --band-mut:#9fb2cc; --on-accent:#04181b; --gold:#e8b53c; --site:#ff7a2e; --site-btn:#ff7a2e; --site-btn-fg:#1d0b02; --site-text:#ff9a52; --site-soft:#33190a; --alert-bg:#ff7a2e; --alert-fg:#1d0b02;
   color-scheme:dark;
 }
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){
     --bg:#eef2f4; --panel:#ffffff; --panel-2:#f3f6f7; --line:#d5dde1;
-    --fg:#142027; --muted:#5c6c76; --accent:#0e7f8c; --accent-soft:#d9eef1;
-    --ok:#1f8f55; --warn:#a85f00; --crit:#c4361f;
-    --ok-soft:#dcf1e5; --warn-soft:#fbecd0; --crit-soft:#fbdfd9;
+    --fg:#142027; --muted:#5c6c76; --accent:#1f6fd0; --accent-soft:#dbe9fb;
+    --ok:#1f8f55; --warn:#1f6fd0; --crit:#c4361f;
+    --ok-soft:#dcf1e5; --warn-soft:#dbe9fb; --crit-soft:#fbdfd9;
     --floor:#f7f9fa; --wall:#7a8a94; --room:#eaf0f2;
+    --band:#1a3359; --band-2:#12274a; --on-accent:#ffffff; --gold:#a87500; --site:#e8590c; --site-btn:#c2410c; --site-btn-fg:#ffffff; --site-text:#c2410c; --site-soft:#ffedd9; --alert-bg:#c2410c; --alert-fg:#ffffff;
     color-scheme:light;
   }
 }
 :root[data-theme="light"]{
   --bg:#eef2f4; --panel:#ffffff; --panel-2:#f3f6f7; --line:#d5dde1;
-  --fg:#142027; --muted:#5c6c76; --accent:#0e7f8c; --accent-soft:#d9eef1;
-  --ok:#1f8f55; --warn:#a85f00; --crit:#c4361f;
-  --ok-soft:#dcf1e5; --warn-soft:#fbecd0; --crit-soft:#fbdfd9;
+  --fg:#142027; --muted:#5c6c76; --accent:#1f6fd0; --accent-soft:#dbe9fb;
+  --ok:#1f8f55; --warn:#1f6fd0; --crit:#c4361f;
+  --ok-soft:#dcf1e5; --warn-soft:#dbe9fb; --crit-soft:#fbdfd9;
   --floor:#f7f9fa; --wall:#7a8a94; --room:#eaf0f2;
+  --band:#1a3359; --band-2:#12274a; --on-accent:#ffffff; --gold:#a87500; --site:#e8590c; --site-btn:#c2410c; --site-btn-fg:#ffffff; --site-text:#c2410c; --site-soft:#ffedd9; --alert-bg:#c2410c; --alert-fg:#ffffff;
   color-scheme:light;
 }
 *{box-sizing:border-box}
 body{
   background:var(--bg); color:var(--fg); font-family:var(--font-ui); font-size:14px; line-height:1.5;
-  padding-block:16px 32px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
+  margin:0;
 }
 .wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 h1,h2,h3,p{margin:0}
@@ -59,16 +61,8 @@ h1,h2,h3,p{margin:0}
 .node.mid b{color:var(--accent)}
 .link{width:34px;height:2px;background:repeating-linear-gradient(90deg,var(--accent) 0 5px,transparent 5px 9px);background-size:9px 2px;animation:flow 1s linear infinite}
 @keyframes flow{to{background-position:9px 0}}
-.notice{display:flex;gap:10px;align-items:flex-start;padding:9px 14px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;background:var(--panel);font-size:12px;color:var(--muted)}
-.notice b{color:var(--fg);font-weight:500}
-
 /* summary chips */
-.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.chip{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
-.chip small{font-size:11px;color:var(--muted);letter-spacing:.04em}
-.chip strong{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
-.chip em{font-style:normal;font-size:12px;color:var(--muted)}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none}
 .s-crit .dot{background:var(--crit);animation:pulse 1.1s ease-in-out infinite}
 .s-warn .dot{background:var(--warn);animation:pulse 1.4s ease-in-out infinite}
 .s-ok .dot{background:var(--ok)}
@@ -76,11 +70,11 @@ h1,h2,h3,p{margin:0}
 @keyframes pulse{50%{opacity:.35}}
 
 /* phase stepper */
-.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0}
-.step{padding:12px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;position:relative}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+.step{padding:14px 16px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;position:relative}
 .step:last-child{border-right:0}
-.step i{font-style:normal;font-family:var(--font-data);font-size:11px;color:var(--muted)}
-.step b{font-size:13px;font-weight:500;color:var(--muted)}
+.step i{font-style:normal;font-family:var(--font-data);font-size:12px;color:var(--muted)}
+.step b{font-size:15px;font-weight:500;color:var(--muted)}
 .step.done b{color:var(--fg)}
 .step.done i::after{content:" 완료";color:var(--ok)}
 .step.now{background:var(--accent-soft)}
@@ -88,13 +82,14 @@ h1,h2,h3,p{margin:0}
 .step.now i::after{content:" 진행 중";color:var(--accent)}
 .step::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--line)}
 .step.done::before{background:var(--ok)} .step.now::before{background:var(--accent)}
+.step.fail b{color:var(--crit);font-weight:600} .step.fail i::after{content:" 실패";color:var(--crit)} .step.fail{background:var(--crit-soft)} .step.fail::before{background:var(--crit)}
 
 /* main grid */
 .main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
 .lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px}
 
 /* video */
-.video{position:relative;background:#05080a;aspect-ratio:4/3;border-radius:0 0 6px 6px;overflow:hidden}
+.video{position:relative;background:#05080a;aspect-ratio:16/10;border-radius:0 0 6px 6px;overflow:hidden}
 .video canvas{width:100%;height:100%;display:block}
 .hud{position:absolute;inset:0;pointer-events:none;font-family:var(--font-data);font-size:11px;color:#d7f3f6;text-shadow:0 1px 2px #000}
 .hud .tl,.hud .tr,.hud .bl,.hud .br{position:absolute;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
@@ -102,7 +97,7 @@ h1,h2,h3,p{margin:0}
 .hud .bl{bottom:0;left:0}.hud .br{bottom:0;right:0;align-items:flex-end}
 .rec{display:inline-flex;align-items:center;gap:6px}
 .rec::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff5a4a;animation:pulse 1s infinite}
-.sample{background:rgba(0,0,0,.55);padding:2px 6px;border-radius:3px;color:#f6d28a}
+.sample{background:rgba(0,0,0,.55);padding:2px 6px;border-radius:3px;color:#cfe3ff}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
 .seg button{all:unset;cursor:pointer;padding:4px 10px;font-size:12px;color:var(--muted)}
 .seg button+button{border-left:1px solid var(--line)}
@@ -128,23 +123,21 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .log li:last-child{border-bottom:0}
 .log time{font-family:var(--font-data);font-size:11px;color:var(--muted)}
 .lv{font-family:var(--font-data);font-size:11px;text-align:center;border-radius:3px;padding:1px 0}
-.lv.info{background:var(--accent-soft);color:var(--accent)}
+.lv.info{background:var(--panel-2);color:var(--muted)}
 .lv.warn{background:var(--warn-soft);color:var(--warn)}
 .lv.crit{background:var(--crit-soft);color:var(--crit)}
 .lv.ok{background:var(--ok-soft);color:var(--ok)}
 
 .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn{all:unset;cursor:pointer;padding:5px 12px;border:1px solid var(--line);border-radius:5px;font-size:12px;color:var(--fg);background:var(--panel-2)}
+.btn{all:unset;display:inline-block;cursor:pointer;padding:5px 12px;border:1px solid var(--line);border-radius:5px;font-size:12px;color:var(--fg);background:var(--panel-2)}
 .btn:hover{border-color:var(--accent)}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 @media (max-width:900px){
   .main,.lower{grid-template-columns:minmax(0,1fr)}
-  .steps{grid-template-columns:repeat(6,minmax(104px,1fr));overflow-x:auto}
+  .steps{grid-template-columns:repeat(5,minmax(124px,1fr));overflow-x:auto}
 }
 @media (max-width:560px){
-  .summary{grid-template-columns:minmax(0,1fr)}
-  .chip strong{font-size:18px}
   .log li{grid-template-columns:54px 44px 1fr}
   .link{width:18px}
 }
@@ -183,6 +176,28 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .kv>div:last-child{border-bottom:0}
 .kv dt{color:var(--muted);font-size:12px}
 .kv dd{margin:0;min-width:0}
+.phone2{position:relative;width:268px;max-width:100%;height:min(590px,calc(100vh - 120px));min-height:420px;margin:0;border-radius:38px;border:7px solid #11161a;background:linear-gradient(160deg,#16324a,#2b1f4a 60%,#4a2a2a);box-shadow:0 0 0 1px var(--line);overflow:hidden;display:flex;flex-direction:column;color:#fff}
+.ph-notch{position:absolute;top:8px;left:50%;width:84px;height:20px;margin-left:-42px;border-radius:12px;background:#0b0e10}
+.ph-bar{display:flex;justify-content:space-between;padding:12px 22px 0;font-size:12px;font-weight:600}
+.ph-lock{text-align:center;padding:24px 0 12px}
+.ph-lock small{display:block;font-size:13px;opacity:.85}
+.ph-lock b{display:block;font-size:56px;font-weight:300;letter-spacing:-.02em;line-height:1.1}
+.ph-list{flex:1;display:flex;flex-direction:column;gap:8px;padding:0 12px;overflow-y:auto;scrollbar-width:none}
+.ph-list::-webkit-scrollbar{display:none}
+.nt{flex:none;background:rgba(255,255,255,.9);color:#14181c;border-radius:16px;padding:9px 12px;font-size:12px;line-height:1.45;animation:ntin .45s cubic-bezier(.2,.9,.3,1.2)}
+.nt .nh{display:flex;align-items:center;gap:6px;font-size:11px;color:#4a5560}
+.nt .nh i{width:15px;height:15px;border-radius:50%;border:2px solid #c99a1b;position:relative;flex:none}
+.nt .nh i::after{content:"";position:absolute;left:50%;top:1px;width:2px;height:5px;background:#c99a1b;margin-left:-1px}
+.nt .nh em{margin-left:auto;font-style:normal}
+.nt b{display:block;font-size:13px;margin:2px 0}
+.nt p{margin:0;white-space:pre-line}
+.sms-empty{margin:24px auto 0;text-align:center;color:rgba(255,255,255,.72);font-size:12px;max-width:190px}
+.ph-home{flex:none;height:5px;width:90px;border-radius:3px;background:rgba(255,255,255,.7);margin:10px auto 8px}
+.phone2.buzz{animation:buzz .5s}
+@keyframes ntin{from{transform:translateY(-24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes buzz{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-.6deg)}40%{transform:translateX(4px) rotate(.6deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.nt,.phone2.buzz{animation:none}}
+.sms-note{margin:0;padding:10px 14px 12px;font-size:11px;color:var(--muted)}
 .tele3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line)}
 .tele3>div{background:var(--panel);padding:10px 14px;display:flex;flex-direction:column;gap:3px;min-width:0}
 .tele3 small{font-size:11px;color:var(--muted)}
@@ -206,48 +221,283 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 }
 @media (prefers-reduced-motion:reduce){.laser{animation:none}}
 
-.video canvas{image-rendering:pixelated;image-rendering:crisp-edges}
-.plan svg image{image-rendering:pixelated}
-.standby{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:13px;color:var(--muted);background:var(--floor)}
-.plan{position:relative}
-.plan .standby{inset:10px 10px 6px;border-radius:4px}
+/* Gazebo 연결 */
+.video img#stream,.video #ov{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.video #ov{pointer-events:none}
+details.panel>summary{cursor:pointer;list-style:none;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;font-weight:600}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel[open]>summary{border-bottom:1px solid var(--line)}
+details.panel>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.cfg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding:14px}
+.cfg label,.cfg .lab{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.cfg input{font:inherit;font-family:var(--font-data);font-size:12px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0;width:100%}
+.cfg input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.cfg .full{grid-column:1/-1}
+.cfg .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cfg .row input{width:88px}
+.cfg pre{margin:0;padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;font-family:var(--font-data);font-size:11px;overflow-x:auto;color:var(--fg)}
+.cfg p{margin:0;font-size:12px;color:var(--muted)}
+.seg button:disabled,.btn:disabled{opacity:.4;cursor:not-allowed}
+.lower{align-items:start}
+@media (max-width:560px){.cfg{grid-template-columns:minmax(0,1fr)}}
+
+/* GOLDEN TIME 브랜드 · 조작 줄 · 요약 */
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mark{width:40px;height:40px;flex:none}
+.wm{font-family:"Barlow Condensed","IBM Plex Sans KR",sans-serif;font-weight:600;font-size:28px;letter-spacing:.14em;line-height:1;color:var(--fg)}
+.brand .sub{font-size:15px;font-weight:500}
+.strip{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.strip .grow{flex:1 1 auto}
+.switch{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:10px;padding:3px 4px;border-radius:6px;font-size:13px;color:var(--fg)}
+.switch .trk{width:40px;height:22px;border-radius:11px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.switch .trk::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.switch[aria-checked="true"] .trk{background:var(--accent)}
+.switch[aria-checked="true"] .trk::after{transform:translateX(18px);background:var(--bg)}
+.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.switch:disabled{opacity:.45;cursor:not-allowed}
+.switch em{font-style:normal;font-family:var(--font-data);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.ex-note{padding:10px 14px;border:1px dashed var(--warn);background:var(--warn-soft);color:var(--warn);border-radius:6px;font-size:13px;font-weight:500}
+.hero{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(136px,.42fr);gap:10px}
+.chip{padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.chip small{font-size:12px;color:var(--muted);letter-spacing:.06em;font-weight:500}
+.chip strong{font-size:26px;font-weight:700;display:flex;align-items:center;gap:10px;letter-spacing:-.02em;line-height:1.2}
+.chip em{font-style:normal;font-size:14px;color:var(--fg);opacity:.85}
+.chip.s-crit{background:var(--crit-soft);border-color:var(--crit)}
+.chip.s-warn{background:var(--warn-soft);border-color:var(--warn)}
+.chip.s-ok{background:var(--ok-soft);border-color:var(--ok)}
+.clock-tile{padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.clock-tile small{font-size:12px;color:var(--muted);letter-spacing:.06em;font-weight:500}
+.clock-tile b{font-size:28px;font-weight:500}
+.foot{font-size:12px;color:var(--muted);text-align:center;padding-top:4px}
+.foot b{color:var(--fg);font-weight:500}
+@media (max-width:900px){.hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.hero{grid-template-columns:minmax(0,1fr)} .chip{min-height:0} .chip strong{font-size:22px} .wm{font-size:24px}}
+
+/* 소방서 사이트 틀 (주황 포인트) */
+.gut{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.vpad{padding-block:20px 40px}
+.site{border-top:5px solid var(--site)}
+.site .util{background:var(--band-2);color:var(--band-mut);font-size:11px}
+.site .util .gut{display:flex;justify-content:space-between;gap:4px 16px;padding-block:5px;flex-wrap:wrap}
+.site .brandrow{background:var(--band);color:var(--band-fg)}
+.site .brandrow .gut{display:flex;align-items:center;gap:14px;padding-block:16px;flex-wrap:wrap}
+.site .logo{width:46px;height:46px;flex:none;color:var(--site)}
+.site .brandrow b{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.site .brandrow small{display:block;font-size:12px;color:var(--band-mut)}
+.site .clock{margin-left:auto;font-size:12px;color:var(--band-mut)}
+.mainnav{background:var(--panel);border-bottom:1px solid var(--line)}
+.mainnav .gut{display:flex;align-items:stretch;overflow-x:auto}
+.mainnav a{display:flex;align-items:center;gap:8px;padding:14px 20px;color:var(--fg);text-decoration:none;font-size:15px;font-weight:500;border-bottom:4px solid transparent;white-space:nowrap}
+.mainnav a:hover{background:var(--panel-2)}
+.mainnav a.on{border-bottom-color:var(--site);color:var(--site-text);font-weight:700}
+.mainnav a:focus-visible{outline:2px solid var(--site);outline-offset:-2px}
+.mainnav .soon{display:flex;align-items:center;padding:14px 14px;color:var(--muted);font-size:13px;white-space:nowrap;opacity:.7}
+.mainnav .soon-note{display:flex;align-items:center;padding:14px 6px;color:var(--muted);font-size:11px;white-space:nowrap}
+.nbadge{background:var(--site-btn);color:var(--site-btn-fg);font-family:var(--font-data);font-size:11px;font-weight:600;border-radius:999px;padding:0 8px;line-height:19px}
+.btn.primary{background:var(--site-btn);color:var(--site-btn-fg);border-color:var(--site-btn);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+
+/* 다음 행동 배너 */
+.alertbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px 18px;align-items:center;padding:16px 20px;border-radius:6px;border:2px solid var(--line);background:var(--panel)}
+.alertbar .ic{width:40px;height:40px;flex:none}
+.alertbar .at b{display:block;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.alertbar .at .d{font-size:14px;color:var(--muted)}
+.alertbar .aa{display:flex;gap:8px;flex-wrap:wrap}
+.alertbar .btn{padding:10px 18px;font-size:15px}
+.alertbar.a-new{background:var(--alert-bg);border-color:var(--alert-bg);color:var(--alert-fg)}
+.alertbar.a-new .at .d{color:var(--alert-fg);opacity:.92}
+.alertbar.a-new .btn,.alertbar.a-new .btn.primary{background:var(--alert-fg);color:var(--alert-bg);border-color:var(--alert-fg);font-weight:700}
+.alertbar.a-new .ic{animation:ring 1.2s ease-in-out infinite;transform-origin:50% 10%}
+.alertbar.a-ack{border-color:var(--site);background:var(--site-soft)}
+.alertbar.a-ack .at b{color:var(--site-text)}
+.alertbar.a-run{border-color:var(--accent);background:var(--accent-soft)}
+.alertbar.a-run .at b{color:var(--accent)}
+.alertbar.a-done{border-color:var(--ok);background:var(--ok-soft)}
+.alertbar.a-done .at b{color:var(--ok)}
+.alertbar.a-idle .ic{opacity:.5}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}}
+
+.sit{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-h h2 .mono{font-weight:500;color:var(--muted);margin-left:6px}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
+.facts .chip{min-height:0;padding:12px 14px;gap:4px}
+.facts .chip strong{font-size:20px}
+.facts .chip em{font-size:13px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:13px}
+.log li.empty{display:block;border-bottom:0}
+.feed li{grid-template-columns:70px 54px minmax(0,1fr)}
+.src{font-size:11px;color:var(--muted);margin-right:2px}
+.brief{padding:12px 14px;border-top:1px solid var(--line);background:var(--panel-2)}
+.brief small{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:2px}
+.brief p{margin:0;font-size:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid var(--line)}
+.actions .btn{padding:7px 14px;font-size:13px}
+.units{list-style:none;margin:0;padding:0}
+.units li{display:grid;grid-template-columns:84px minmax(0,1fr) 108px;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.units li:last-child{border-bottom:0}
+.units .bar i{background:var(--site)}
+.units .ue{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.units .eta{font-family:var(--font-data);font-size:11px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+.rec{border-collapse:collapse;width:100%;font-size:13px;min-width:680px}
+.rec th,.rec td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rec th{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.04em;background:var(--panel-2)}
+.rec tr.sel td{background:var(--site-soft)}
+.rowbtn{all:unset;cursor:pointer;color:var(--site-text);font-family:var(--font-data);font-weight:600}
+.rowbtn:focus-visible{outline:2px solid var(--site);outline-offset:2px}
+.sum{padding:10px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+@media (max-width:900px){.sit{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.alertbar{grid-template-columns:auto minmax(0,1fr)} .alertbar .aa{grid-column:1/-1} .facts{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){
+  .feed li{grid-template-columns:62px 44px minmax(0,1fr)}
+  .units li{grid-template-columns:70px minmax(0,1fr) 92px}
+  .site .clock{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){.alertbar.a-new .ic{animation:none}}
+table.rec{display:table}
 </style>
+<style>
+.pf{position:fixed;right:16px;bottom:16px;z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100vw - 32px)}
+.pf-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:500;color:var(--fg);box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.pf-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pf-tab b{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--crit);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.pf.closed .pf-body{display:none}
+.pf-body{display:flex;flex-direction:column;align-items:center;gap:6px;filter:drop-shadow(0 8px 24px rgba(0,0,0,.35))}
+@media (max-width:1500px){.pf-body{zoom:.78}}
+.pf-note{margin:0;width:100%;padding:5px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center}
+</style>
+
+<header class="site">
+  <div class="util"><div class="gut"><span>시연용 임시 사이트 · 실제 기관과 관련 없음</span><span>상황실 근무자 (시연 계정)</span></div></div>
+  <div class="brandrow"><div class="gut">
+    <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/><path d="M20 7c1 5 6 8 6 14a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3 0-4-1-7 0-10z" fill="currentColor"/></svg>
+    <div><b id="st-name">소방서</b><small>119 상황실 · GOLDEN TIME 관제 연계 (시연)</small></div>
+    <span class="clock mono" id="st-clock"></span>
+  </div></div>
+</header>
+<nav class="mainnav" aria-label="메뉴"><div class="gut">
+  <a href="#situation" id="nav-situation">상황실<span class="nbadge" id="nav-badge" hidden>신고</span></a>
+  <a href="#records" id="nav-records">사건 기록</a>
+  <a href="#control" id="nav-control">GOLDEN TIME 관제</a>
+  <span class="soon">소방서 소개</span><span class="soon">민원 안내</span><span class="soon">안전 정보</span><span class="soon-note">준비 중</span>
+</div></nav>
+
+<main>
+
+<section id="view-situation" class="view"><div class="gut vpad"><div class="col">
+  <section class="alertbar a-idle" id="alert-bar" aria-label="다음 행동">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17h12l-1.5-2v-4.5a4.5 4.5 0 0 0-9 0V15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+    <div class="at"><b id="al-t" aria-live="polite">대기 중</b><span class="d" id="al-d">접수된 신고가 없습니다. HOLMES가 화재를 감지해 신고하면 이곳에 표시됩니다.</span></div>
+    <div class="aa"><button class="btn primary" id="b-next" type="button" hidden>접수 확인</button><a class="btn" id="b-ctl" href="#control" hidden>관제 화면 열기</a></div>
+  </section>
+  <div class="sit">
+    <div class="col">
+      <section class="panel" aria-label="현재 사건">
+        <div class="panel-h"><h2>현재 사건<span class="mono" id="inc-id"></span></h2><span class="pill" id="inc-pill">대기</span></div>
+        <div class="empty" id="inc-empty">진행 중인 사건이 없습니다.</div>
+        <div id="inc-body" hidden>
+          <div class="facts">
+            <div class="panel chip s-crit" id="sf-fire"><small>화재</small><strong><span class="dot"></span><span id="sf-fire-t"></span></strong><em id="sf-fire-d"></em></div>
+            <div class="panel chip s-warn" id="sf-robot"><small>HOLMES</small><strong><span class="dot"></span><span id="sf-robot-t"></span></strong><em id="sf-robot-d"></em></div>
+            <div class="panel chip s-warn" id="sf-res"><small>요구조자</small><strong><span class="dot"></span><span id="sf-res-t"></span></strong><em id="sf-res-d"></em></div>
+          </div>
+          <dl class="kv">
+            <div><dt>위치</dt><dd>○○ 단독주택단지 ○○길 12-7 (주방 열원)</dd></div>
+            <div><dt>진압 결과</dt><dd id="inc-verdict">—</dd></div>
+            <div><dt>접수 시각</dt><dd class="mono" id="inc-time">—</dd></div>
+            <div><dt>신고 방식</dt><dd>관제 요원 승인 후 전달</dd></div>
+          </dl>
+          <div class="brief"><small>현장 도착 전 전달 사항</small><p id="inc-brief"></p></div>
+          <div class="actions"><button class="btn" id="b-close" type="button">사건 종료</button></div>
+        </div>
+      </section>
+      <section class="panel" aria-label="출동 현황">
+        <div class="panel-h"><h2>출동 현황</h2><span class="tag">시연용 가속 · 실제 1초 = 10초</span></div>
+        <ul class="units" id="units"></ul>
+      </section>
+    </div>
+    <section class="panel" aria-label="알림">
+      <div class="panel-h"><h2>알림</h2><span class="tag">HOLMES · 상황실</span></div>
+      <ol class="log feed" id="feed"></ol>
+    </section>
+  </div>
+</div></div></section>
+
+<section id="view-records" class="view" hidden><div class="gut vpad"><div class="col">
+  <section class="panel" aria-label="사건 목록">
+    <div class="panel-h"><h2>사건 기록</h2><span class="tag">사건번호를 누르면 상세가 열립니다 · 구분이 예시인 행은 가짜 데이터입니다</span></div>
+    <div class="tablewrap">
+      <table class="rec">
+        <thead><tr><th>사건번호</th><th>접수</th><th>진압 결과</th><th>결과</th><th>요구조자</th><th>소요</th><th>구분</th></tr></thead>
+        <tbody id="rec-cur-body" hidden>
+          <tr id="rc-row"><td><button class="rowbtn" id="rc-id" type="button"></button></td><td class="mono" id="rc-at"></td><td id="rc-verdict"></td><td><span class="pill info">진행 중</span></td><td id="rc-res"></td><td class="mono" id="rc-dur"></td><td><span class="pill info">시연</span></td></tr>
+        </tbody>
+        <tbody id="rec-body"></tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel" aria-label="사건 상세">
+    <div class="panel-h"><h2>사건 상세<span class="mono" id="rd-title"></span></h2></div>
+    <div class="empty" id="rec-empty">위 목록에서 사건을 선택하세요.</div>
+    <div id="rec-det" hidden>
+      <div class="sum" id="rd-sum"></div>
+      <ol class="log feed" id="rd-log"></ol>
+    </div>
+  </section>
+</div></div></section>
+
+<section id="view-control" class="view" hidden><div class="gut vpad">
 <div class="wrap">
 
   <header class="top">
     <div class="brand">
-      <h1>파이어 도그 관제 중계</h1>
-      <p>○○시 ○○동 단독주택 · <span id="cause">대기 중</span></p>
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17.5" fill="none" stroke="var(--gold)" stroke-width="2.5"/><path d="M20 20 L20 6 A14 14 0 0 1 32.1 13 Z" fill="var(--gold)"/><circle cx="20" cy="20" r="2" fill="var(--gold)"/></svg>
+      <div>
+        <h1><span class="wm">GOLDEN TIME</span><span class="sub">관제 중계</span></h1>
+        <p>사건 <span class="mono">2026-1030-0412</span> · ○○ 단독주택단지 ○○길 12-7 · 주방 경보기 신호</p>
+      </div>
     </div>
     <div class="chain" aria-label="연결 구조">
-      <div class="node"><b>파이어 도그 FD-01</b><span id="n-robot">연결 중</span></div>
+      <div class="node"><b>HOLMES</b><span id="n-robot">연결됨 · 38ms</span></div>
       <div class="link" aria-hidden="true"></div>
-      <div class="node mid"><b>관제 중계</b><span>표시 전용</span></div>
+      <div class="node mid"><b>GOLDEN TIME</b><span>표시 전용 중계</span></div>
       <div class="link" aria-hidden="true"></div>
       <div class="node"><b>관할 소방서</b><span>상황실 열람 중</span></div>
     </div>
   </header>
 
-  <div class="notice">
-    <div><b>중계 전용 화면입니다.</b> 로봇의 영상, 도면, 상태를 소방서에 보여주기만 하고, 소방청 시스템과 직접 연동하거나 도면을 전송·저장하지 않습니다. 아래 데이터는 시뮬레이션 로봇에서 실시간으로 받은 값입니다.</div>
+  <div class="strip">
+    <div class="seg" role="group" aria-label="데이터 출처">
+      <button id="c-demo" aria-pressed="true">시연 데이터</button>
+      <button id="c-gz" aria-pressed="false">Gazebo 연결</button>
+    </div>
+    <button class="switch" id="sc-toggle" type="button" role="switch" aria-checked="false"><span class="trk" aria-hidden="true"></span><span>진압 실패 시 흐름 보기</span><em>예시</em></button>
+    <span class="grow"></span>
+    <button class="btn" id="b-play">일시정지</button>
+    <button class="btn" id="b-speed">속도 1×</button>
+    <button class="btn" id="b-reset">처음부터</button>
   </div>
+  <div class="ex-note" id="ex-note" hidden>진압 실패 예시 화면입니다. 실제 시연이 아니라, 방사 후에도 열원이 80℃ 이상이면 관제 화면에서 이렇게 진행된다는 설명용입니다.</div>
 
-  <section class="summary" aria-label="전체 상황 요약">
-    <div class="panel chip" id="chip-fire">
-      <small>화재 상태</small>
-      <strong><span class="dot"></span><span id="fire-t">대기</span></strong>
-      <em id="fire-d">긴급 상황이 아닙니다</em>
+  <section class="hero" aria-label="전체 상황">
+    <div class="panel chip s-crit" id="chip-fire">
+      <small>화재</small>
+      <strong><span class="dot"></span><span id="fire-t">화재 진행 중</span></strong>
+      <em id="fire-d">경보 위치 열원 확인 전</em>
     </div>
-    <div class="panel chip" id="chip-robot">
-      <small>로봇 행동</small>
-      <strong><span class="dot"></span><span id="robot-t">대기</span></strong>
-      <em id="robot-d">긴급모드에서만 영상과 위치를 보냅니다</em>
+    <div class="panel chip s-warn" id="chip-robot">
+      <small>HOLMES</small>
+      <strong><span class="dot"></span><span id="robot-t">경보 수신</span></strong>
+      <em id="robot-d">주방 경보기 신호</em>
     </div>
-    <div class="panel chip" id="chip-res">
-      <small>거주자</small>
-      <strong><span class="dot"></span><span id="res-t">대기</span></strong>
-      <em id="res-d">—</em>
+    <div class="panel chip s-warn" id="chip-res">
+      <small>요구조자</small>
+      <strong><span class="dot"></span><span id="res-t">탐색 전</span></strong>
+      <em id="res-d">화재 확인 후 탐색을 시작합니다</em>
     </div>
+    <div class="panel clock-tile"><small>경과 시간</small><b class="mono" id="t-time">T+00:00</b></div>
   </section>
 
   <section class="panel" aria-label="진행 단계">
@@ -257,137 +507,766 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <div class="main">
     <section class="panel" aria-label="로봇 시점 영상">
       <div class="panel-h">
-        <h2>로봇 시점 영상</h2>
-        <span class="tag">열화상 MLX90640 · 32×24</span>
+        <h2>열화상 영상</h2>
+        <span class="pill" id="conn-pill">시연 데이터</span>
       </div>
       <div class="video">
-        <canvas id="cam" width="32" height="24"></canvas>
+        <canvas id="cam" width="800" height="500"></canvas>
+        <img id="stream" alt="Gazebo 열화상 영상" hidden>
+        <canvas id="ov" width="800" height="500" hidden></canvas>
         <div class="hud">
-          <div class="tl"><span class="rec">LIVE</span><span id="hud-time">--:--:--</span></div>
-          <div class="tr"><span>THERMAL</span></div>
-          <div class="bl"><span id="hud-temp">MAX — °C</span><span id="hud-min">MIN — °C</span></div>
-          <div class="br"><span>FD-01 · THERMAL</span><span id="hud-fps">0 fps</span></div>
+          <div class="tl"><span class="rec">LIVE</span><span id="hud-time">00:00:00</span></div>
+          <div class="tr"><span class="sample" id="hud-src">시연 데이터</span><span id="hud-mode">THERMAL</span></div>
+          <div class="bl"><span id="hud-temp">MAX 312.0 °C</span><span id="hud-obj">요구조자 0명</span></div>
+          <div class="br"><span>HOLMES · FRONT CAM</span><span id="hud-fps">15 fps</span></div>
         </div>
-        <div class="standby" id="cam-standby">대기 · 긴급모드에서만 열화상 영상을 보냅니다</div>
       </div>
     </section>
 
     <section class="panel" aria-label="집 도면">
       <div class="panel-h">
-        <h2>집 도면 · 로봇 위치</h2>
-        <span class="tag" id="plan-tag">house 맵</span>
+        <h2>집 도면 · HOLMES 위치</h2>
+        <span class="tag" id="plan-tag">단독주택 1층 · 약 72㎡ · 1m = 61px</span>
       </div>
       <div class="plan">
-        <svg id="plan" viewBox="0 0 260 210" role="img" aria-label="집 도면 위 로봇 위치">
-          <image id="map-img" x="0" y="0" width="260" height="210"/>
-          <g id="labels" fill="var(--muted)" font-size="7" font-family="IBM Plex Sans KR, sans-serif" text-anchor="middle"></g>
-          <path id="route-done" d="" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <g id="bot" opacity="0">
-            <circle r="4.5" fill="var(--panel)" stroke="var(--accent)" stroke-width="1.2"/>
-            <path d="M3 0 L-2 -2.4 L-2 2.4 Z" fill="var(--accent)"/>
+        <svg viewBox="0 0 700 480" role="img" aria-label="집 도면 위 로봇, 열원, 요구조자, 대피 경로">
+          <defs>
+            <radialGradient id="heat" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="var(--crit)" stop-opacity=".85"/>
+              <stop offset="55%" stop-color="#ff9a3c" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="#ff9a3c" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <image id="map-img" x="0" y="0" width="0" height="0" style="display:none;image-rendering:pixelated"/>
+          <g id="map-labels" fill="var(--muted)" font-size="12" font-family="IBM Plex Sans KR, sans-serif" text-anchor="middle" style="display:none"></g>
+          <text id="plan-wait" x="350" y="240" fill="var(--muted)" font-size="14" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif" style="display:none">대기 · 긴급모드에서만 도면과 HOLMES 위치를 표시합니다</text>
+          <g id="plan-demo">
+          <g fill="var(--room)" stroke="var(--wall)" stroke-width="2.5">
+            <rect x="30" y="30" width="210" height="170"/>
+            <rect x="240" y="30" width="170" height="170"/>
+            <rect x="410" y="30" width="100" height="110"/>
+            <rect x="510" y="30" width="160" height="200"/>
+            <rect x="30" y="200" width="380" height="250"/>
+            <rect x="410" y="140" width="100" height="310"/>
+            <rect x="510" y="230" width="160" height="220"/>
           </g>
-          <g id="scale" stroke="var(--muted)" stroke-width="0.8"></g>
+          <g stroke="var(--room)" stroke-width="5">
+            <line x1="510" y1="165" x2="510" y2="205"/>
+            <line x1="510" y1="380" x2="510" y2="420"/>
+            <line x1="410" y1="300" x2="410" y2="340"/>
+            <line x1="100" y1="200" x2="140" y2="200"/>
+            <line x1="300" y1="200" x2="340" y2="200"/>
+            <line x1="440" y1="140" x2="480" y2="140"/>
+          </g>
+          <g fill="var(--muted)" font-size="12" font-family="IBM Plex Sans KR, sans-serif" text-anchor="middle">
+            <text x="135" y="178">안방</text>
+            <text x="325" y="54">작은방</text>
+            <text x="460" y="88">욕실</text>
+            <text x="590" y="200">주방</text>
+            <text x="220" y="330">거실</text>
+            <text x="460" y="440">복도</text>
+            <text x="590" y="440">현관</text>
+          </g>
+          <g fill="none" stroke="var(--wall)" stroke-width="1.5" opacity=".7">
+            <rect x="560" y="44" width="100" height="22"/>
+            <rect x="580" y="46" width="22" height="18"/>
+            <rect x="60" y="48" width="100" height="56"/>
+            <rect x="90" y="360" width="150" height="40"/>
+          </g>
+          </g>
+          <circle id="heat-c" cx="591" cy="55" r="70" fill="url(#heat)" opacity=".9"/>
+          <circle id="fire-c" cx="591" cy="55" r="7" fill="var(--crit)"/>
+          <path id="route" d="M630 420 L560 400 L460 400 L460 215 L540 185 L591 118" fill="none" stroke="var(--accent)" stroke-opacity=".45" stroke-width="2" stroke-dasharray="6 5"/>
+          <path id="srch-route" d="" fill="none" stroke="var(--accent)" stroke-opacity=".25" stroke-width="2" stroke-dasharray="3 6"/>
+          <path id="kid-route" d="M285 305 L330 320 L410 320 L460 330 L460 400 L560 400 L630 435" fill="none" stroke="none"/>
+          <path id="laser" class="laser" d="M285 305 L330 320 L410 320 L460 330 L460 400 L560 400 L630 435" fill="none" stroke="var(--ok)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+          <path id="route-done" d="" fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <g id="res2" transform="translate(110 78)" opacity="0">
+            <circle r="7" fill="var(--crit)"/>
+            <text id="res2-lbl" y="-12" fill="var(--crit)" font-size="11" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif">요구조자 2</text>
+          </g>
+          <g id="res" transform="translate(285 305)" opacity="0">
+            <circle r="7" fill="var(--crit)"/>
+            <text id="res-lbl" y="-12" fill="var(--crit)" font-size="11" text-anchor="middle" font-family="IBM Plex Sans KR, sans-serif">요구조자 1</text>
+          </g>
+          <g id="bot" transform="translate(630 420)">
+            <circle r="13" fill="var(--panel)" stroke="var(--accent)" stroke-width="2.5"/>
+            <path id="bot-dir" d="M0 -9 L6 5 L-6 5 Z" fill="var(--accent)"/>
+            <text y="29" text-anchor="middle" fill="var(--accent)" font-size="11" font-weight="600" font-family="IBM Plex Mono, monospace">HOLMES</text>
+          </g>
+          <g id="plan-demo2">
+          <g stroke="var(--muted)" stroke-width="1.5">
+            <line x1="30" y1="468" x2="152" y2="468"/><line x1="30" y1="463" x2="30" y2="473"/><line x1="152" y1="463" x2="152" y2="473"/>
+          </g>
+          <text x="162" y="472" fill="var(--muted)" font-size="11" font-family="IBM Plex Mono, monospace">2 m</text>
+          <text x="350" y="20" fill="var(--muted)" font-size="11" font-family="IBM Plex Mono, monospace" text-anchor="middle">10.5 m</text>
+          </g>
         </svg>
-        <div class="standby" id="plan-standby">대기 · 긴급모드에서만 도면과 로봇 위치를 표시합니다</div>
       </div>
       <div class="legend">
-        <span><i class="sw" style="background:var(--accent)"></i>로봇 · 지나온 경로</span>
+        <span><i class="sw" style="background:var(--accent)"></i>HOLMES · 지나온 경로</span>
+        <span><i class="sw" style="background:var(--crit)"></i>열원</span>
+        <span><i class="sw" style="background:var(--crit)"></i>요구조자(대피 전)</span>
+        <span><i class="sw" style="background:var(--ok)"></i>대피 경로(바닥 투사)</span>
       </div>
     </section>
   </div>
 
   <div class="lower">
-    <section class="panel" aria-label="신고 확인">
-      <div class="panel-h"><h2>신고 확인</h2><span class="pill" id="call-pill">대기</span></div>
+    <section class="panel" aria-label="화재 판정과 진압 확인">
+      <div class="panel-h"><h2>화재 판정 · 진압 확인</h2><span class="tag">열화상 · 기준 80℃</span></div>
+      <div class="judge">
+        <div class="jtop">
+          <div class="verdict" id="verdict">
+            <small>현재 판정</small>
+            <strong id="v-t">확인 전</strong>
+            <em id="v-d">경보 위치의 열원 온도를 확인합니다</em>
+          </div>
+          <div class="pnum"><small>열원 최고 온도</small><b id="v-p">—</b></div>
+        </div>
+        <div class="meter">
+          <div class="meter-h"><span>방사 전 <span class="mono">80℃ 이상이면 화재</span></span><b class="mono" id="m-before">—</b></div>
+          <div class="track"><i id="f-before"></i><u style="left:20%"></u></div>
+        </div>
+        <div class="meter">
+          <div class="meter-h"><span>방사 후 재측정 <span class="mono">80℃ 미만이면 진압</span></span><b class="mono" id="m-after">—</b></div>
+          <div class="track"><i id="f-after"></i><u style="left:20%"></u></div>
+        </div>
+        <div class="next"><small>다음 행동</small><span id="v-next">경보 위치로 이동해 열원을 확인합니다</span></div>
+      </div>
+    </section>
+    <section class="panel" aria-label="상황 기록">
+      <div class="panel-h"><h2>상황 기록</h2><span class="tag">시간순</span></div>
+      <ol class="log" id="log"></ol>
+    </section>
+    <section class="panel" aria-label="요구조자 현황">
+      <div class="panel-h"><h2>요구조자 현황</h2><span class="pill" id="sv-pill">탐색 전</span></div>
       <dl class="kv">
-        <div><dt>감지 근거</dt><dd id="k-why">—</dd></div>
-        <div><dt>자동 신고</dt><dd id="k-call">—</dd></div>
-        <div><dt>전달 내용</dt><dd id="k-msg">○○시 ○○동 단독주택에서 화재가 발생했습니다. 로봇이 거주자 대피를 돕고 있습니다.</dd></div>
+        <div><dt>누적 발견</dt><dd id="sv-n">0명</dd></div>
+        <div><dt>요구조자 1</dt><dd id="sv-1">—</dd></div>
+        <div><dt>요구조자 2</dt><dd id="sv-2">—</dd></div>
+        <div><dt>탐색 순서</dt><dd>거실 → 안방 (화재 위치에서 가까운 순)</dd></div>
       </dl>
     </section>
-
+    <section class="panel" aria-label="관제 승인과 신고">
+      <div class="panel-h"><h2>관제 승인 · 신고</h2><span class="pill" id="call-pill">대기</span></div>
+      <dl class="kv">
+        <div><dt>감지 근거</dt><dd id="k-why">주방 경보기 신호 + 열화상 80℃ 이상 열원</dd></div>
+        <div><dt>관제 승인</dt><dd id="k-appr">—</dd></div>
+        <div><dt>119 신고</dt><dd id="k-call">관제 승인 후 전달</dd></div>
+        <div><dt>소방서 확인</dt><dd id="k-ack">—</dd></div>
+        <div><dt>보호자 문자</dt><dd id="k-sms">0/3건 발송</dd></div>
+        <div><dt>전달 내용</dt><dd id="k-msg">○○ 단독주택단지 ○○길 12-7 주방 화재가 확인되었습니다. HOLMES가 요구조자 탐색과 대피 안내를 진행합니다.</dd></div>
+      </dl>
+      <p class="sms-note">문자는 HOLMES가 보호자(가상 번호)에게 직접 보냅니다. 관제 화면에는 발송 여부만 표시됩니다. 화면 오른쪽 아래의 휴대폰은 보호자 쪽 도착 모습을 보여 주는 시연용입니다.</p>
+    </section>
     <section class="panel" aria-label="로봇 상태">
-      <div class="panel-h"><h2>로봇 상태</h2><span class="tag" id="t-time">T+00:00</span></div>
-      <div class="tele">
-        <div><small>현재 모드</small><b id="t-mode">대기</b></div>
+      <div class="panel-h"><h2>HOLMES 상태</h2></div>
+      <div class="tele3">
+        <div><small>배터리</small><b id="t-bat">86%</b><span class="bar"><i id="b-bat" style="width:86%"></i></span></div>
+        <div><small id="t-lat-l">통신 지연</small><b id="t-lat">38 ms</b></div>
         <div><small>이동 거리</small><b id="t-trav">0.0 m</b></div>
       </div>
       <ul class="mods" id="mods"></ul>
     </section>
-
-    <section class="panel" aria-label="상황 기록">
-      <div class="panel-h"><h2>상황 기록</h2></div>
-      <ol class="log" id="log"></ol>
-    </section>
   </div>
 
+  <details class="panel" id="cfg-box">
+    <summary><span>연결 설정 · Gazebo</span><span class="tag" id="cfg-state">시연 데이터 사용 중</span></summary>
+    <div class="cfg">
+      <div class="full"><p>게시된 페이지에서는 외부 연결이 막혀 있습니다. 파일로 내려받아 Gazebo가 있는 PC에서 연 뒤, 위쪽의 Gazebo 연결 버튼을 누르세요.</p></div>
+      <label>rosbridge 주소<input id="c-ws" type="text" spellcheck="false"></label>
+      <label>영상 서버(web_video_server) 주소<input id="c-video" type="text" spellcheck="false"></label>
+      <label>열화상 이미지 토픽<input id="c-thermal" type="text" spellcheck="false"></label>
+      <label>위치 토픽 (Odometry 또는 PoseWithCovarianceStamped)<input id="c-pose" type="text" spellcheck="false"></label>
+      <label>상태 토픽 (std_msgs/String, JSON 문자열)<input id="c-status" type="text" spellcheck="false"></label>
+      <div class="lab"><span>요구조자 탐지 온도 (℃)</span><span class="row"><input id="c-tmin" type="number" step="0.5" aria-label="최저 온도"> ~ <input id="c-tmax" type="number" step="0.5" aria-label="최고 온도"></span></div>
+      <label>도면 기준점 X (px, 로봇 시작 위치)<input id="c-ox" type="number"></label>
+      <label>도면 기준점 Y (px)<input id="c-oy" type="number"></label>
+      <label>도면 축척 (px/m)<input id="c-scale" type="number"></label>
+      <div class="full row"><button class="btn" id="c-apply">적용</button><span class="tag" id="c-msg"></span></div>
+      <div class="full">
+        <p>상태 토픽으로 아래 모양의 JSON을 보내면 화면이 채워집니다. 위치는 위치 토픽에서, 영상은 영상 서버에서 받습니다.</p>
+<pre>{
+  "phase": 2,
+  "action": "search",
+  "verdict": "fire",
+  "fire": {"x": 4.2, "y": 6.5, "max_temp": 312},
+  "before": 312, "after": null,
+  "survivors": [{"x": -3.0, "y": 5.0, "temp": 36.4, "state": "found", "room": "거실"}],
+  "detections": [{"x": 0.4, "y": 0.2, "w": 0.2, "h": 0.6, "temp": 36.4}],
+  "escape_path": [[-3.0, 5.0], [0, 5.0], [0, 0]],
+  "laser": false, "voice": false, "agent": "ready", "battery": 86, "moving": true,
+  "report": {"state": "done", "ack": false},
+  "log": "거실에서 요구조자 발견",
+  "sms": "주방에서 화재가 확인되었습니다."
+}</pre>
+        <p>action: alarm approach confirm search guide return spray measure result idle · verdict: wait scan fire ready spray recheck ok fail · survivors의 state: found escaping safe stuck · agent: ready spraying used · report.state: idle checking waiting done · sms: 보호자에게 보낸 문자 내용(바뀔 때마다 한 건씩 표시) · detections의 x, y, w, h는 영상 크기에 대한 0~1 비율입니다. 요구조자는 열화상 30~42℃ 영역, 화재는 80℃ 이상 열원으로 판정합니다.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="pf" id="pf">
+    <button class="pf-tab" id="pf-tab" type="button" aria-expanded="true" aria-controls="pf-body"><span>보호자 휴대폰</span><b id="pf-n" hidden>0</b></button>
+    <div class="pf-body" id="pf-body">
+      <div class="phone2" id="phone" aria-label="보호자 휴대폰 잠금 화면">
+        <div class="ph-notch"></div>
+        <div class="ph-bar"><span id="ph-time">14:22</span><span>5G ▮▮▮</span></div>
+        <div class="ph-lock"><small id="ph-date"></small><b id="ph-clock">14:22</b></div>
+        <div class="ph-list" id="sms-list" aria-live="polite"><p class="sms-empty">화재가 탐지되면 등록된 보호자에게 문자가 자동 발송됩니다.</p></div>
+        <div class="ph-home"></div>
+      </div>
+      <p class="pf-note">시연용 가상 번호 · 실제 문자는 발송되지 않습니다</p>
+    </div>
+  </div>
+
+  <p class="foot"><b>중계 전용 화면입니다.</b> HOLMES의 영상, 도면, 상태를 소방서에 보여주기만 하며, 소방청 시스템과 직접 연동하거나 도면을 전송·저장하지 않습니다. 화면의 데이터는 시연용입니다.</p>
+
 </div>
+
+</div></section>
+
+</main>
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var STEPS = [
-    ['report', '감지·신고'], ['searching', '거주자 탐색'], ['guiding', '대피유도'],
-    ['to_fire', '화재 위치로 이동'], ['suppressing', '진압'], ['done', '완료 연락']
+  var PX_M = 61;                                  // 도면 1m = 61px
+  var FIRE_T = 80;                                // 화재 판정·진압 기준 온도(℃)
+  var SURV_T = 36.4;                              // 시연용 요구조자 체표 온도(℃)
+  var T0 = 312;                                   // 시연용 방사 전 열원 온도(℃)
+
+  // 탐색 경로(화재 앞 → 거실 → 안방). 도면 좌표
+  var SP = [[591,118],[540,185],[460,215],[460,320],[410,320],[330,320],[120,320],[120,200],[115,150]];
+  var cum = [0];
+  for (var ci = 1; ci < SP.length; ci++) cum.push(cum[ci - 1] + Math.hypot(SP[ci][0] - SP[ci - 1][0], SP[ci][1] - SP[ci - 1][1]));
+  var S1 = cum[5], S2 = cum[8];                   // 거실 정지 위치, 안방 정지 위치
+  $('srch-route').setAttribute('d', 'M' + SP.map(function(p){ return p[0] + ' ' + p[1]; }).join(' L'));
+  var P = { route:$('route'), srch:$('srch-route'), kid:$('kid-route') };
+  var L = { route:P.route.getTotalLength(), srch:P.srch.getTotalLength(), kid:P.kid.getTotalLength() };
+
+  var TL = {
+    A: { end:86, b:[12,16,52,68,72],
+         labels:['경보·화재 확인','관제 승인·신고','탐색·대피 안내','방사','진압 확인'] },
+    B: { end:80, b:[12,16,52,68,72],
+         labels:['경보·화재 확인','관제 승인·신고','탐색·대피 안내','방사','진압 확인'] }
+  };
+  var COMMON = [
+    { t:0,    lv:'crit', m:'주방 경보기 신호 수신. 경보 위치를 주방으로 지정' },
+    { t:1,    lv:'info', m:'관제에 1차 신호(미확인) 전송. 경보음 작동' },
+    { t:1.5,  lv:'info', m:'보호자에게 문자 발송 (1/3 화재 탐지)', local:true },
+    { t:3,    lv:'info', m:'경보 위치(주방)로 이동 시작' },
+    { t:9,    lv:'info', m:'열화상에서 열원 검출. 온도 측정 시작' },
+    { t:12,   lv:'crit', m:'화재 확인. 열원 ' + T0 + '℃로 기준 ' + FIRE_T + '℃ 이상. 관제에 화재 확인 신호와 영상 전송' },
+    { t:12.5, lv:'info', m:'보호자에게 문자 발송 (2/3 화재 감지)', local:true },
+    { t:14,   lv:'ok',   m:'관제 요원이 신고를 승인. 119 신고 이벤트 기록' },
+    { t:16,   lv:'info', m:'탐색 순서 결정(화재 위치에서 가까운 순): 거실 → 안방' },
+    { t:17,   lv:'ok',   m:'119 상황실 접수 확인' },
+    { t:27,   lv:'crit', m:'거실에서 {band} 열원 검출. 요구조자 판정(체표 36.4℃). 누적 1명. 관제에 보고' },
+    { t:28,   lv:'info', m:'바닥 투사로 대피 경로 표시. 음성 안내: 물수건으로 코와 입을 막고 낮은 자세로 나가세요' },
+    { t:32,   lv:'info', m:'안내 유지 시간 종료. 다음 공간(안방)으로 이동' },
+    { t:42,   lv:'crit', m:'안방에서 {band} 열원 검출. 요구조자 판정(체표 36.2℃). 누적 2명. 대피 안내 시작' },
+    { t:44,   lv:'ok',   m:'거실 요구조자가 현관에 도착. 대피 완료' },
+    { t:50,   lv:'crit', m:'이동 불가 요구조자: 안방. 위치를 관제와 119에 전달' },
+    { t:52,   lv:'info', m:'탐색 완료. 열원 앞으로 이동' },
+    { t:62,   lv:'info', m:'방사 범위에 ' + '{band}' + ' 영역 없음 확인' },
+    { t:64,   lv:'info', m:'고체 에어로졸 1회 방사' },
+    { t:68,   lv:'info', m:'방사 종료. 열화상으로 열원 온도 재측정' }
   ];
-  // map frame label positions [m]
-  var ROOMS = [
-    ['거실', 3.20, 2.55], ['주방', 2.52, 6.28], ['다용도실', 4.80, 6.60], ['욕실', 6.34, 7.12],
-    ['침실1', 8.00, 1.45], ['침실2', 9.07, 6.32], ['복도', 8.00, 3.70], ['현관', 4.17, 0.55]
-  ];
-  var MODS = [
-    ['lidar', '라이다'], ['thermal', '열화상 센서 MLX90640'], ['drive', '트라이스타 휠 구동'],
-    ['projector', '빔프로젝터'], ['towel', '숨수건 보관함'], ['aerosol', '고체 에어로졸 소화장치 2개']
-  ];
+  var TEMP_A = 61, TEMP_B = 144;                  // 시연용 방사 후 열원 온도(℃)
+  var EVENTS = {
+    A: COMMON.concat([
+      { t:72,   lv:'ok',   m:'진압 완료. 방사 후 열원 ' + TEMP_A + '℃로 ' + FIRE_T + '℃ 미만' },
+      { t:72.5, lv:'info', m:'보호자에게 문자 발송 (3/3 진압 완료)', local:true },
+      { t:74,   lv:'ok',   m:'최종 현황 보고: 대피 1명, 이동 불가 1명(안방)' },
+      { t:76,   lv:'info', m:'충전 패드로 복귀 시작' },
+      { t:86,   lv:'ok',   m:'충전 패드 도착. 재발화 감시 대기' }
+    ]),
+    B: COMMON.concat([
+      { t:72,   lv:'crit', m:'진압 실패. 방사 후에도 열원 ' + TEMP_B + '℃로 ' + FIRE_T + '℃ 이상. 관제에 보고' },
+      { t:72.5, lv:'info', m:'보호자에게 문자 발송 (3/3 진압 실패)', local:true },
+      { t:74,   lv:'crit', m:'최종 현황 보고: 대피 1명, 이동 불가 1명(안방). 소방관에게 안방 위치 전달' },
+      { t:76,   lv:'info', m:'현장 대기. 영상 중계 유지, 소방관 인계 대기' }
+    ])
+  };
+  var ADDR = '○○ 단독주택단지 ○○길 12-7';
+  var SMS = {
+    A: [
+      { t:1.5,  h:'[GOLDEN TIME] 화재 탐지', m:ADDR + ' 주방 경보기가 울렸습니다.\nHOLMES가 현장으로 이동해 화재 여부를 확인합니다.' },
+      { t:12.5, h:'[GOLDEN TIME] 화재 감지', m:'주방에서 화재가 확인되었습니다. 119 신고를 진행합니다.\nHOLMES가 집 안 요구조자를 찾아 대피를 안내합니다. 집에 들어가지 마세요.' },
+      { t:72.5, h:'[GOLDEN TIME] 진압 완료', m:'방사 후 열원이 ' + TEMP_A + '℃로 내려가 진압을 확인했습니다.\n대피 1명, 이동 불가 1명(안방). 소방관이 도착하면 안방 위치를 알립니다.' }
+    ],
+    B: [
+      { t:1.5,  h:'[GOLDEN TIME] 화재 탐지', m:ADDR + ' 주방 경보기가 울렸습니다.\nHOLMES가 현장으로 이동해 화재 여부를 확인합니다.' },
+      { t:12.5, h:'[GOLDEN TIME] 화재 감지', m:'주방에서 화재가 확인되었습니다. 119 신고를 진행합니다.\nHOLMES가 집 안 요구조자를 찾아 대피를 안내합니다. 집에 들어가지 마세요.' },
+      { t:72.5, h:'[GOLDEN TIME] 진압 실패', m:'방사 후에도 열원이 ' + TEMP_B + '℃로 진압하지 못했습니다.\n대피 1명, 이동 불가 1명(안방). 119가 출동 중입니다. 집에 들어가지 마세요.' }
+    ]
+  };
   var LV = { crit:'긴급', warn:'주의', info:'정보', ok:'완료' };
-  var CAUSE = { fire_detected:'열화상 센서로 화재 감지', fire_alarm:'화재 경보기 경보 수신' };
-  var ROBOT = {
-    report:      ['s-crit', '신고·연락 중', '119 신고 · 보호자/거주자 연락'],
-    searching:   ['s-warn', '거주자 탐색', '열화상으로 36.5℃ 내외 열원 탐색'],
-    guiding:     ['s-warn', '대피유도 중', '빔프로젝터 바닥 화살표 · 음성 안내'],
-    to_fire:     ['s-warn', '화재 위치로 이동', '화재(경보) 위치로 이동 중'],
-    suppressing: ['s-crit', '에어로졸 방출 중', '고체 에어로졸 소화장치 작동'],
-    done:        ['s-ok', '진압 완료', '보호자/거주자에게 결과 연락']
-  };
-  var FIRE = {
-    alarm:       ['s-warn', '화재 확인 중', '경보 수신 · 열화상으로 확인 전'],
-    burning:     ['s-crit', '화재 진행 중', '열화상 80℃ 이상 영역'],
-    suppressing: ['s-warn', '진압 중', '고체 에어로졸 방출'],
-    out:         ['s-ok', '진압 완료', '로봇 진압 완료']
-  };
-  var RES = {
-    none:      ['s-warn', '확인 중', '거주자를 찾는 중'],
-    found:     ['s-warn', '발견', '열화상으로 거주자 확인'],
-    guiding:   ['s-warn', '대피 중', '로봇을 따라 현관으로 이동'],
-    evacuated: ['s-ok', '대피 완료', '현관 앞까지 대피유도 완료'],
-    not_found: ['s-crit', '찾지 못함', '탐색 지점에서 거주자 미확인'],
-    failed:    ['s-crit', '대피 미완료', '대피 목적지에 도착하지 못함']
-  };
 
-  var status = { standby:true }, map = null, mapLoading = false;
-  var trail = [], trav = 0, last = null, start = 0, lastMsg = 0, frames = 0;
-
-  // ---- static parts ----
-  STEPS.forEach(function(s, i){
-    var d = document.createElement('div'); d.className = 'step';
-    d.innerHTML = '<i>0' + (i + 1) + '</i><b></b>'; d.lastChild.textContent = s[1];
-    $('steps').appendChild(d);
-  });
-  var modEl = {};
-  MODS.forEach(function(m){
-    var li = document.createElement('li');
-    li.innerHTML = '<span class="dot"></span><span class="n"></span><span class="v"></span>';
-    li.children[1].textContent = m[1];
-    $('mods').appendChild(li); modEl[m[0]] = li;
-  });
-  function setMod(k, cls, txt){ modEl[k].className = cls; modEl[k].lastChild.textContent = txt; }
-  function chip(id, look, tid, did){
-    $(id).className = 'panel chip ' + look[0]; $(tid).textContent = look[1]; $(did).textContent = look[2];
-  }
+  function sm(u){ u = Math.min(1, Math.max(0, u)); return u*u*(3-2*u); }
   function pad(n){ return (n < 10 ? '0' : '') + n; }
-  function mmss(x){ x = Math.max(0, Math.floor(x)); return pad(Math.floor(x/60)) + ':' + pad(x%60); }
+  function mmss(x){ x = Math.floor(x); return pad(Math.floor(x/60)) + ':' + pad(x%60); }
 
-  // iron palette for the thermal image
-  var LUT = (function(){
+  function simulate(t, sc){
+    var fail = sc === 'B', b = TL[sc].b, ph = 0;
+    for (var i = 0; i < b.length; i++) if (t >= b[i]) ph = i + 1;
+    var s = { sc:sc, phase:ph };
+    var p = t < 2 ? 0 : t < 12 ? sm((t - 2)/10) : 1;
+    if (t < 16) s.rob = { path:'route', s:p*L.route };
+    else if (t < 27) s.rob = { path:'srch', s:S1*sm((t - 16)/11) };
+    else if (t < 32) s.rob = { path:'srch', s:S1 };
+    else if (t < 42) s.rob = { path:'srch', s:S1 + (S2 - S1)*sm((t - 32)/10) };
+    else if (t < 52) s.rob = { path:'srch', s:S2 };
+    else if (t < 62) s.rob = { path:'srch', s:S2*(1 - sm((t - 52)/10)) };
+    else if (t < 74 || fail) s.rob = { path:'srch', s:0 };
+    else s.rob = { path:'route', s:L.route*(1 - sm((t - 74)/12)) };
+    s.moving = (t >= 2 && t < 12) || (t >= 16 && t < 27) || (t >= 32 && t < 42) || (t >= 52 && t < 62) || (!fail && t >= 74 && t < 86);
+
+    if (t < 16){ s.scene = 'fire'; s.zoom = p; }
+    else if (t < 26){ s.scene = 'escape'; s.zoom = 0.3; }
+    else if (t < 32){ s.scene = 'person'; s.zoom = 0.5; }
+    else if (t < 41){ s.scene = 'escape'; s.zoom = 0.3; }
+    else if (t < 52){ s.scene = 'person'; s.zoom = 0.5; }
+    else if (t < 62){ s.scene = 'escape'; s.zoom = 0.3; }
+    else if (t < 74 || fail){ s.scene = 'fire'; s.zoom = 1; }
+    else { s.scene = 'escape'; s.zoom = 0.3; }
+
+    s.f = 1 - (fail ? 0.62 : 0.926)*sm((t - 64)/6);
+    s.temp = 41 + 271*s.f;
+    s.before = t >= 10 ? T0 : null;
+    s.after = t >= 68 ? Math.round(s.temp) : null;
+    s.spray = t >= 64 && t < 68;
+    s.agent = t < 64 ? 'ready' : t < 68 ? 'spraying' : 'used';
+    s.verdict = t < 9 ? 'wait' : t < 12 ? 'scan' : t < 62 ? 'fire' : t < 64 ? 'ready' : t < 68 ? 'spray' : t < 72 ? 'recheck' : fail ? 'fail' : 'ok';
+
+    s.kid = { vis:t >= 27, pos:{ path:'kid', s:t < 29 ? 0 : Math.min(L.kid, (t - 29)/15*L.kid) },
+              st:t < 29 ? 'found' : t < 44 ? 'move' : 'safe' };
+    s.eld = { vis:t >= 42, st:t < 50 ? 'found' : 'stuck' };
+    s.found = (t >= 27 ? 1 : 0) + (t >= 42 ? 1 : 0);
+    s.evac = t >= 44 ? 1 : 0;
+    s.stuck = t >= 50 ? 1 : 0;
+    s.laser = t >= 28 && t < 48;
+    s.voice = (t >= 27 && t < 32) || (t >= 42 && t < 50);
+    s.survT = t < 41 ? 36.4 : 36.2;
+    return s;
+  }
+
+
+  var t = 0, sc = 'A', playing = true, speed = 1, last = performance.now();
+  var evIdx = 0, lastSec = -1, lat = 38, mode = 'ir';
+  var trail = [], trailLast = null, trav = 0, lastPos = null;
+  var frames = 0, fpsT = performance.now(), lastDraw = 0;
+  var COLORS = { warn:'var(--warn)', ok:'var(--ok)', crit:'var(--crit)' };
+
+  var MODS = [
+    ['lidar','라이다'], ['heat','열 감지 센서'], ['thermal','열화상 카메라'],
+    ['drive','삼각바퀴 구동'], ['laser','바닥 투사(경로)'], ['voice','음성 안내'], ['agent','고체 에어로졸']
+  ];
+  var modEl = {};
+  (function(){
+    var ul = $('mods');
+    MODS.forEach(function(m){
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="dot"></span><span class="n">' + m[1] + '</span><span class="v"></span>';
+      ul.appendChild(li); modEl[m[0]] = li;
+    });
+  })();
+  function setMod(k, cls, txt){ modEl[k].className = cls; modEl[k].lastChild.textContent = txt; }
+
+  function buildSteps(){
+    var box = $('steps'); box.innerHTML = '';
+    TL[sc].labels.forEach(function(l, i){
+      var d = document.createElement('div'); d.className = 'step';
+      d.innerHTML = '<i>0' + (i + 1) + '</i><b></b>'; d.lastChild.textContent = l; box.appendChild(d);
+    });
+  }
+  function addLog(ev){
+    var li = document.createElement('li');
+    li.innerHTML = '<time>T+' + mmss(ev.t) + '</time><span class="lv ' + ev.lv + '">' + LV[ev.lv] + '</span><span></span>';
+    li.lastChild.textContent = ev.m.replace('{band}', band());
+    var log = $('log'); log.insertBefore(li, log.firstChild);
+    if (!ev.local) stationLog(ev);
+  }
+  function chip(id, cls, title, desc, tid, did){
+    $(id).className = 'panel chip ' + cls; $(tid).textContent = title; $(did).textContent = desc;
+  }
+  function posOn(o){
+    var el = P[o.path], len = L[o.path];
+    var c = el.getPointAtLength(o.s);
+    var a = el.getPointAtLength(Math.max(0, Math.min(len - 3, o.s - 1.5)));
+    var b = el.getPointAtLength(Math.max(3, Math.min(len, o.s + 1.5)));
+    return { x:c.x, y:c.y, deg:Math.atan2(b.x - a.x, -(b.y - a.y))*180/Math.PI };
+  }
+  function objCount(s){
+    return s.scene === 'person' ? 1 : 0;
+  }
+  function f1(x){ return x.toFixed(1); }
+
+  // ---- 보호자 문자 (관제 화면에는 발송 여부만 표시, 휴대폰 화면은 보호자 쪽 도착 모습을 보여 주는 시연용) ----
+  function smsEl(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  var smsN = 0, phN = 0, SMS_EMPTY = '화재가 탐지되면 등록된 보호자에게 문자가 자동 발송됩니다.';
+  var RECV_DELAY = 1.2;                           // 발송 후 보호자 폰에 도착하기까지(시연용)
+  (function(){ $('ph-date').textContent = new Date().toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'long' }); })();
+  function pfOpen(on){
+    $('pf').classList.toggle('closed', !on); $('pf-tab').setAttribute('aria-expanded', on);
+    if (on){ $('pf-n').hidden = true; $('pf-n').textContent = '0'; }
+  }
+  $('pf-tab').addEventListener('click', function(){ pfOpen($('pf').classList.contains('closed')); });
+  pfOpen(window.innerWidth >= 1100);
+  function phClock(sec){
+    var base = 14*3600 + 22*60 + 7 + Math.floor(sec), txt = pad(Math.floor(base/3600)) + ':' + pad(Math.floor(base%3600/60));
+    if ($('ph-clock').textContent !== txt){ $('ph-clock').textContent = txt; $('ph-time').textContent = txt; }
+    return txt;
+  }
+  function smsReset(){
+    smsN = 0; phN = 0; $('pf-n').hidden = true; $('pf-n').textContent = '0';
+    var l = $('sms-list'); l.innerHTML = '';
+    l.appendChild(smsEl('p', 'sms-empty', SMS_EMPTY));
+    $('k-sms').textContent = '0/3건 발송';
+  }
+  function phoneAdd(x, clk){
+    var l = $('sms-list');
+    if (phN === 0) l.innerHTML = '';
+    var n = smsEl('div', 'nt'), hd = smsEl('div', 'nh');
+    hd.appendChild(smsEl('i')); hd.appendChild(smsEl('span', null, '문자 메시지 · HOLMES')); hd.appendChild(smsEl('em', null, clk));
+    n.appendChild(hd); n.appendChild(smsEl('b', null, x.h)); n.appendChild(smsEl('p', null, x.m));
+    l.insertBefore(n, l.firstChild); l.scrollTop = 0; phN++;
+    var ph = $('phone'); ph.classList.remove('buzz'); void ph.offsetWidth; ph.classList.add('buzz');
+    if ($('pf').classList.contains('closed')){ var nb = $('pf-n'); nb.hidden = false; nb.textContent = parseInt(nb.textContent, 10) + 1; }
+  }
+  function smsAdd(x){                              // Gazebo 상태 토픽의 sms 필드
+    phoneAdd({ h:x.h, m:x.m }, new Date().toTimeString().slice(0, 5)); smsN++;
+    $('k-sms').textContent = smsN + '건 발송';
+  }
+  function smsRender(tt){
+    var arr = SMS[sc], clk = phClock(tt);
+    while (smsN < arr.length && arr[smsN].t <= tt) smsN++;
+    while (phN < smsN && arr[phN].t + RECV_DELAY <= tt) phoneAdd(arr[phN], phClock(arr[phN].t + RECV_DELAY));
+    var sending = phN < smsN;
+    var k = smsN + '/3건 발송' + (smsN ? ' · ' + arr[smsN - 1].h.replace('[GOLDEN TIME] ', '') + (sending ? ' (전송 중)' : '') : '');
+    if ($('k-sms').textContent !== k) $('k-sms').textContent = k;
+  }
+
+  function update(s){
+    var ev = EVENTS[sc];
+    while (evIdx < ev.length && ev[evIdx].t <= t){ addLog(ev[evIdx]); evIdx++; }
+    var pos = posOn(s.rob);
+    if (lastPos){
+      var dd = Math.hypot(pos.x - lastPos.x, pos.y - lastPos.y);
+      if (dd < 60) trav += dd;
+    }
+    lastPos = pos;
+    if (!trailLast || Math.hypot(pos.x - trailLast.x, pos.y - trailLast.y) > 5){
+      trail.push(pos); trailLast = pos;
+      var d = ''; for (var i = 0; i < trail.length; i++) d += (i ? ' L' : 'M') + trail[i].x.toFixed(1) + ' ' + trail[i].y.toFixed(1);
+      $('route-done').setAttribute('d', trail.length > 1 ? d : '');
+    }
+    var sec = Math.floor(t);
+    if (sec !== lastSec){
+      lastSec = sec;
+      lat = 38 + Math.round((Math.random() - 0.5)*12 + (s.rob.path === 'route' ? 10*(s.rob.s/L.route) : 6));
+      $('n-robot').textContent = '연결됨 · ' + lat + 'ms';
+      $('t-lat').textContent = lat + ' ms';
+      var base = 14*3600 + 22*60 + 7 + sec;
+      $('hud-time').textContent = pad(Math.floor(base/3600)) + ':' + pad(Math.floor(base%3600/60)) + ':' + pad(base%60);
+      $('t-time').textContent = 'T+' + mmss(t);
+    }
+    var steps = $('steps').children, fail = sc === 'B';
+    for (var i2 = 0; i2 < steps.length; i2++){
+      var scls = i2 < s.phase ? ' done' : (i2 === s.phase ? ' now' : '');
+      if (fail && i2 === 4 && t >= 72) scls = ' fail';
+      steps[i2].className = 'step' + scls;
+    }
+
+    var temp = Math.round(s.temp);
+    var dFire = Math.hypot(pos.x - 591, pos.y - 55)/PX_M;
+
+    // 화재 칸: 경보 위치 확인 → 화재 확인 → 방사 → 재측정 → 진압 완료/실패
+    if (t < 9) chip('chip-fire','s-crit','경보 위치 확인 중','주방 경보기 신호 · 열원 확인 전','fire-t','fire-d');
+    else if (t < 12) chip('chip-fire','s-crit','열원 확인 중','열화상 측정 중 · 기준 ' + FIRE_T + '℃','fire-t','fire-d');
+    else if (t < 64) chip('chip-fire','s-crit','화재 확인','열원 ' + T0 + '℃ · ' + FIRE_T + '℃ 이상','fire-t','fire-d');
+    else if (t < 68) chip('chip-fire','s-warn','진압 중','고체 에어로졸 방사','fire-t','fire-d');
+    else if (t < 72) chip('chip-fire','s-warn','진압 확인 중','재측정 ' + temp + '℃','fire-t','fire-d');
+    else if (!fail) chip('chip-fire','s-ok','진압 완료','열원 ' + temp + '℃ · ' + FIRE_T + '℃ 미만','fire-t','fire-d');
+    else chip('chip-fire','s-crit','진압 실패','열원 ' + temp + '℃ · ' + FIRE_T + '℃ 이상 · 소방관 대기','fire-t','fire-d');
+
+    // HOLMES 칸
+    var R;
+    if (t < 2) R = ['warn','경보 수신','주방 경보기 신호 · 관제에 1차 신호'];
+    else if (t < 12) R = ['warn','경보 위치로 이동','열원까지 ' + f1(dFire) + ' m'];
+    else if (t < 14) R = ['warn','화재 확인','관제 승인 대기 · 119 신고'];
+    else if (t < 16) R = ['warn','탐색 준비','관제 승인 완료 · 탐색 순서 결정'];
+    else if (t < 27) R = ['warn','요구조자 탐색','거실로 이동 · 탐색 1/2'];
+    else if (t < 32) R = ['warn','대피 안내','거실 · 바닥 투사와 음성 안내'];
+    else if (t < 42) R = ['warn','요구조자 탐색','안방으로 이동 · 탐색 2/2'];
+    else if (t < 50) R = ['warn','대피 안내','안방 · 이동하는지 확인 중'];
+    else if (t < 52) R = ['crit','이동 불가 보고','안방 요구조자 위치 전달'];
+    else if (t < 62) R = ['warn','열원 앞으로 이동','탐색 완료 · 주방으로 이동'];
+    else if (t < 64) R = ['warn','방사 준비','방사 범위에 사람 없음 확인'];
+    else if (t < 68) R = ['warn','방사 중','고체 에어로졸 1회'];
+    else if (t < 72) R = ['warn','진압 확인','열화상으로 온도 재측정'];
+    else if (fail) R = ['warn','현장 대기','영상 중계 유지 · 소방관 인계 대기'];
+    else if (t < 76) R = ['ok','결과 보고','진압 완료 · 관제와 보호자에게 알림'];
+    else R = ['warn','충전 패드로 복귀','남은 거리 ' + f1(s.rob.s/PX_M) + ' m'];
+    chip('chip-robot','s-' + R[0], R[1], R[2], 'robot-t', 'robot-d');
+
+    // 요구조자 칸
+    if (s.found === 0) chip('chip-res','s-warn','탐색 전', t < 16 ? '화재 확인 후 탐색을 시작합니다' : '거실 → 안방 순서로 탐색 중','res-t','res-d');
+    else {
+      var parts = [];
+      if (s.kid.st === 'move') parts.push('대피 중 1명');
+      if (s.evac) parts.push('대피 완료 ' + s.evac + '명');
+      if (s.found - s.evac - (s.kid.st === 'move' ? 1 : 0) - s.stuck > 0) parts.push('안내 중 1명');
+      if (s.stuck) parts.push('이동 불가 1명(안방)');
+      chip('chip-res', s.found > s.evac ? 's-crit' : 's-ok', s.found + '명 발견', parts.join(' · '), 'res-t', 'res-d');
+    }
+
+    // 화재 판정 · 진압 확인 패널
+    var VT = {
+      wait:['verdict','확인 전','경보 위치의 열원 온도를 확인합니다','경보 위치(주방)로 이동해 열원을 확인합니다'],
+      scan:['verdict v-judge','열원 확인 중','열화상으로 열원 온도를 측정 중','' + FIRE_T + '℃ 이상이면 화재로 판정합니다'],
+      fire:['verdict v-no','화재 확인','열원 ' + T0 + '℃ · 기준 ' + FIRE_T + '℃ 이상',
+            t < 16 ? '관제 승인을 기다립니다' : t < 52 ? '집 안 요구조자를 찾아 대피를 안내합니다' : '열원 앞으로 이동해 방사를 준비합니다'],
+      ready:['verdict v-judge','방사 준비','방사 범위에 요구조자 없음','고체 에어로졸을 1회 방사합니다'],
+      spray:['verdict v-judge','방사 중','고체 에어로졸 1회 방사','방사가 끝나면 열원 온도를 다시 잽니다'],
+      recheck:['verdict v-judge','재측정 중','방사 후 열원 온도 확인','' + FIRE_T + '℃ 미만이면 진압으로 판정합니다'],
+      ok:['verdict v-can','진압 완료','방사 후 ' + temp + '℃ · ' + FIRE_T + '℃ 미만','결과를 관제와 보호자에게 알리고 충전 패드로 복귀합니다'],
+      fail:['verdict v-no','진압 실패','방사 후 ' + temp + '℃ · ' + FIRE_T + '℃ 이상','결과를 관제와 보호자에게 알리고 소방관 도착을 기다립니다']
+    }[s.verdict];
+    $('verdict').className = VT[0]; $('v-t').textContent = VT[1]; $('v-d').textContent = VT[2]; $('v-next').textContent = VT[3];
+    if (s.before === null){
+      $('v-p').textContent = '—'; $('v-p').style.color = '';
+      $('m-before').textContent = '—'; $('f-before').style.width = '0';
+    } else {
+      $('v-p').textContent = temp + '℃'; $('v-p').style.color = temp >= FIRE_T ? 'var(--crit)' : 'var(--ok)';
+      $('m-before').textContent = s.before + '℃';
+      $('f-before').style.width = Math.min(100, s.before/400*100) + '%'; $('f-before').style.background = 'var(--crit)';
+    }
+    if (s.after === null){ $('m-after').textContent = '—'; $('f-after').style.width = '0'; }
+    else {
+      $('m-after').textContent = s.after + '℃' + (t < 72 ? ' (측정 중)' : '');
+      $('f-after').style.width = Math.min(100, s.after/400*100) + '%';
+      $('f-after').style.background = t < 72 ? 'var(--warn)' : s.after >= FIRE_T ? 'var(--crit)' : 'var(--ok)';
+    }
+
+    // 요구조자 현황
+    $('sv-n').textContent = s.found + '명';
+    $('sv-1').textContent = t < 27 ? '—' : t < 29 ? '거실 · 발견 · 체표 36.4℃' : t < 44 ? '거실 → 현관 · 대피 중' : '현관 도착 · 대피 완료';
+    $('sv-2').textContent = t < 42 ? '—' : t < 50 ? '안방 · 발견 · 체표 36.2℃ · 이동 확인 중' : '안방 · 이동 불가 · 소방관에게 위치 전달';
+    var svp = $('sv-pill');
+    var svT = s.found === 0 ? '탐색 전' : s.found + '명 발견' + (s.stuck ? ' · 이동 불가 1' : '');
+    var svC = s.found === 0 ? 'pill' : s.found > s.evac ? 'pill crit' : 'pill ok';
+    if (svp.textContent !== svT || svp.className !== svC){ svp.textContent = svT; svp.className = svC; }
+
+    // 관제 승인 · 신고
+    var cp = $('call-pill');
+    if (t < 1){ cp.className = 'pill'; cp.textContent = '대기'; }
+    else if (t < 12){ cp.className = 'pill info'; cp.textContent = '확인 중'; }
+    else if (t < 14){ cp.className = 'pill warn'; cp.textContent = '승인 대기'; }
+    else { cp.className = 'pill ok'; cp.textContent = '신고 완료'; }
+    $('k-appr').textContent = t < 12 ? '—' : t < 14 ? '관제 요원 확인 대기 · 화재 확인 신호와 영상 수신' : '승인 완료 · T+00:14 (시연: 자동 승인)';
+    $('k-call').textContent = t < 14 ? '관제 승인 후 전달' : '119 신고 이벤트 기록 · 전달 완료';
+    $('k-ack').textContent = t < 17 ? '—' : '119 상황실 접수 확인 · T+00:17';
+    smsRender(t);
+
+    // 로봇 상태
+    var bat = 86 - 0.045*t;
+    $('t-bat').textContent = Math.round(bat) + '%'; $('b-bat').style.width = bat + '%';
+    $('t-trav').textContent = f1(trav/PX_M) + ' m';
+    $('hud-temp').textContent = 'MAX ' + f1(s.temp) + ' °C';
+    $('hud-obj').textContent = '요구조자 후보 ' + objCount(s) + '명';
+    setMod('lidar', 'on', '정상');
+    setMod('heat', s.temp > 150 ? 'hot' : 'on', '최고 ' + temp + '℃');
+    setMod('thermal', 'act', '요구조자 ' + band());
+    setMod('drive', s.moving ? 'act' : 'on', s.moving ? '이동 중' : '정지');
+    setMod('laser', s.laser ? 'act' : 'on', s.laser ? '경로 표시 중' : '대기');
+    setMod('voice', s.voice ? 'act' : 'on', s.voice ? '안내 중' : '대기');
+    setMod('agent', s.agent === 'ready' ? 'on' : s.agent === 'spraying' ? 'act' : '', s.agent === 'ready' ? '장전됨 (1회용)' : s.agent === 'spraying' ? '방사 중' : '사용 완료');
+
+    // 도면
+    $('bot').setAttribute('transform', 'translate(' + pos.x.toFixed(1) + ' ' + pos.y.toFixed(1) + ')');
+    $('bot-dir').setAttribute('transform', 'rotate(' + pos.deg.toFixed(1) + ')');
+    var res = $('res');
+    if (s.kid.vis){
+      var kp = posOn(s.kid.pos), kc = COLORS[s.kid.st === 'found' ? 'crit' : s.kid.st === 'move' ? 'warn' : 'ok'];
+      res.setAttribute('transform', 'translate(' + kp.x.toFixed(1) + ' ' + kp.y.toFixed(1) + ')');
+      res.setAttribute('opacity', 1);
+      res.firstElementChild.style.fill = kc; $('res-lbl').style.fill = kc;
+    } else res.setAttribute('opacity', 0);
+    var res2 = $('res2');
+    res2.setAttribute('opacity', s.eld.vis ? 1 : 0);
+    $('res2-lbl').textContent = s.eld.st === 'stuck' ? '요구조자 2 · 이동 불가' : '요구조자 2';
+    $('laser').setAttribute('opacity', s.laser ? 0.95 : 0);
+    var fc = Math.min(s.f, 1.4);
+    $('heat-c').setAttribute('r', (38 + 52*fc).toFixed(1));
+    $('heat-c').style.opacity = Math.min(1, 0.12 + 0.85*fc).toFixed(2);
+    $('fire-c').setAttribute('r', (3 + 6*fc).toFixed(1));
+    $('fire-c').style.opacity = s.f > 0.15 ? 1 : 0.35;
+  }
+
+  // ---- 로봇 시점 영상 (시뮬레이션) ----
+  var cv = $('cam'), cx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  function poly(pts, color){
+    cx.fillStyle = color; cx.beginPath(); cx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) cx.lineTo(pts[i][0], pts[i][1]);
+    cx.closePath(); cx.fill();
+  }
+  function rr(x, y, w, h, r, color){
+    cx.fillStyle = color; cx.beginPath();
+    if (cx.roundRect) cx.roundRect(x, y, w, h, r); else cx.rect(x, y, w, h);
+    cx.fill();
+  }
+  function box(x, y, w, h, color, label){
+    cx.strokeStyle = color; cx.lineWidth = 2; cx.strokeRect(x, y, w, h);
+    cx.font = '500 12px "IBM Plex Sans KR", sans-serif';
+    var tw = cx.measureText(label).width + 10, ly = Math.max(18, y);
+    cx.fillStyle = color; cx.fillRect(x - 1, ly - 18, tw, 18);
+    cx.fillStyle = '#05080a'; cx.fillText(label, x + 4, ly - 5);
+  }
+  function person(px, by, h, ir, time){
+    px += Math.sin(time*2)*1.5;
+    var hr = h*0.12, headY = by - h + hr, torsoTop = headY + hr*1.2, torsoH = h*0.4, torsoW = h*0.3;
+    var c = ir ? { head:'#ffd987', torso:'#ff9a3c', legs:'#d9552e', arm:'#ff8a34' }
+               : { head:'#c9a27e', torso:'#46506b', legs:'#2e3246', arm:'#3d4660' };
+    if (ir){
+      var g = cx.createRadialGradient(px, by - h*0.5, 0, px, by - h*0.5, h*0.8);
+      g.addColorStop(0, 'rgba(255,190,80,.45)'); g.addColorStop(1, 'rgba(255,120,40,0)');
+      cx.fillStyle = g; cx.fillRect(px - h, by - h*1.4, h*2, h*1.6);
+    }
+    rr(px - torsoW*0.46, torsoTop + torsoH*0.85, torsoW*0.42, by - (torsoTop + torsoH*0.85), 6, c.legs);
+    rr(px + torsoW*0.04, torsoTop + torsoH*0.85, torsoW*0.42, by - (torsoTop + torsoH*0.85), 6, c.legs);
+    rr(px - torsoW*0.5 - hr*0.9, torsoTop + hr*0.2, hr*0.9, torsoH*0.85, 6, c.arm);
+    rr(px + torsoW*0.5, torsoTop + hr*0.2, hr*0.9, torsoH*0.85, 6, c.arm);
+    rr(px - torsoW/2, torsoTop, torsoW, torsoH, torsoW*0.3, c.torso);
+    cx.fillStyle = c.head; cx.beginPath(); cx.arc(px, headY, hr, 0, 7); cx.fill();
+  }
+  function flame(fx, fy, r, f, ir, time){
+    cx.save(); cx.globalCompositeOperation = 'lighter';
+    var g = cx.createRadialGradient(fx, fy, 0, fx, fy, r*5);
+    g.addColorStop(0, 'rgba(255,' + (ir ? 110 : 140) + ',30,' + Math.min(0.6, 0.45*f).toFixed(2) + ')');
+    g.addColorStop(1, 'rgba(255,80,20,0)');
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    for (var k = 0; k < 7; k++){
+      var ph = time*9 + k*1.7;
+      var ox = Math.sin(ph)*r*0.22, oy = -k*r*0.3*(0.7 + 0.3*Math.sin(ph*0.8));
+      var rr2 = r*(1 - k*0.1)*(0.9 + 0.1*Math.sin(ph*1.3));
+      var gg = cx.createRadialGradient(fx + ox, fy + oy, 0, fx + ox, fy + oy, rr2);
+      gg.addColorStop(0, 'rgba(255,245,190,.95)'); gg.addColorStop(0.35, 'rgba(255,150,30,.8)');
+      gg.addColorStop(0.7, 'rgba(210,40,25,.5)'); gg.addColorStop(1, 'rgba(120,20,100,0)');
+      cx.fillStyle = gg; cx.beginPath(); cx.arc(fx + ox, fy + oy, rr2, 0, 7); cx.fill();
+    }
+    cx.restore();
+  }
+
+  function draw(s, time){
+    var ir = mode === 'ir', f = s.f, moving = s.moving;
+    var vx = W*0.5 + Math.sin(time*1.7)*(moving ? 5 : 1.5);
+    var vy = H*0.45 + Math.sin(time*5.1)*(moving ? 3 : 0.6);
+    var ew = 170 + 400*s.zoom, eh = ew*0.58;
+    var x0 = vx - ew/2, x1 = vx + ew/2, y0 = vy - eh/2, y1 = vy + eh/2;
+    var C = ir ? { ceil:'#150b30', wall:'#1d1042', end:'#25135c', floor:'#2b1252', top:'#33196e' }
+               : { ceil:'#8d897f', wall:'#7b766b', end:'#a39d90', floor:'#5b4837', top:'#6d655a' };
+    cx.clearRect(0, 0, W, H);
+    poly([[0,0],[W,0],[x1,y0],[x0,y0]], C.ceil);
+    poly([[0,0],[x0,y0],[x0,y1],[0,H]], C.wall);
+    poly([[W,0],[x1,y0],[x1,y1],[W,H]], C.wall);
+    poly([[0,H],[W,H],[x1,y1],[x0,y1]], C.floor);
+    cx.fillStyle = C.end; cx.fillRect(x0, y0, ew, eh);
+    cx.strokeStyle = 'rgba(0,0,0,.28)'; cx.lineWidth = 2; cx.beginPath();
+    cx.moveTo(0,0); cx.lineTo(x0,y0); cx.moveTo(W,0); cx.lineTo(x1,y0);
+    cx.moveTo(0,H); cx.lineTo(x0,y1); cx.moveTo(W,H); cx.lineTo(x1,y1); cx.stroke();
+
+    var boxes = [], smoke = 0;
+    if (s.scene === 'fire'){
+      cx.fillStyle = C.top; cx.fillRect(x0 + ew*0.42, y1 - eh*0.34, ew*0.54, eh*0.34);
+      var fx = x0 + ew*0.71, fy = y1 - eh*0.34, r = ew*0.13*(0.3 + 0.7*f);
+      smoke = 0.6*Math.min(1, f);
+      if (f > 0.15){
+        flame(fx, fy, r, f, ir, time);
+        var bh = Math.max(r*1.6, 34);
+        boxes.push({ x:fx - bh, y:fy - r*0.9 - bh, w:bh*2, h:bh*2 + r*0.9, c:s.temp >= FIRE_T ? '#ff6a55' : '#5fcf8b',
+                     l:'열원 ' + Math.round(s.temp) + '°C · ' + FIRE_T + '°C ' + (s.temp >= FIRE_T ? '이상' : '미만') });
+      } else {
+        var er = ew*0.06, eg = cx.createRadialGradient(fx, fy, 0, fx, fy, er);
+        eg.addColorStop(0, 'rgba(255,120,40,' + Math.min(0.5, f*9).toFixed(2) + ')'); eg.addColorStop(1, 'rgba(255,80,20,0)');
+        cx.fillStyle = eg; cx.beginPath(); cx.arc(fx, fy, er, 0, 7); cx.fill();
+      }
+      if (s.spray){
+        for (var i = 0; i < 80; i++){
+          var u = (time*1.6 + i*0.618)%1, sp = (Math.sin(i*12.9898)*43758.5453)%1;
+          var px = W*0.5 + (fx - W*0.5)*u + sp*u*70, py = H*0.95 + (fy - H*0.95)*u + Math.cos(i*7.3)*u*45;
+          cx.fillStyle = ir ? 'rgba(150,190,255,' + (0.35*(1 - u*0.6)).toFixed(2) + ')' : 'rgba(245,245,238,' + (0.4*(1 - u*0.5)).toFixed(2) + ')';
+          cx.beginPath(); cx.arc(px, py, 4 + u*22, 0, 7); cx.fill();
+        }
+      }
+    } else if (s.scene === 'person'){
+      smoke = 0.35;
+      var pxx = x0 + ew*0.5, ph2 = eh*0.78;
+      person(pxx, y1, ph2, ir, time);
+      boxes.push({ x:pxx - ph2*0.28, y:y1 - ph2 - 6, w:ph2*0.56, h:ph2 + 6, c:'#5fcf8b', l:'요구조자 ' + (s.survT + Math.sin(time*2)*0.1).toFixed(1) + '°C' });
+    } else {
+      smoke = 0.15;
+      var dx = vx - ew*0.12, dy = y0 + eh*0.14, dw = ew*0.24, dh = y1 - dy;
+      cx.fillStyle = ir ? '#3a2d7a' : '#5c4a3a'; cx.fillRect(dx, dy, dw, dh);
+      cx.fillStyle = ir ? '#6a58b0' : '#c9b27a'; cx.fillRect(dx + dw*0.8, dy + dh*0.5, dw*0.06, dh*0.06);
+    }
+
+    if (!ir){
+      var sg = cx.createLinearGradient(0, 0, 0, H*0.75);
+      sg.addColorStop(0, 'rgba(60,60,60,' + smoke.toFixed(2) + ')'); sg.addColorStop(1, 'rgba(60,60,60,0)');
+      cx.fillStyle = sg; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = 'rgba(0,0,0,.22)'; cx.fillRect(0, 0, W, H);
+    }
+    for (var b = 0; b < boxes.length; b++) box(boxes[b].x, boxes[b].y, boxes[b].w, boxes[b].h, boxes[b].c, boxes[b].l);
+
+    if (ir){
+      var bar = cx.createLinearGradient(0, 100, 0, 320);
+      bar.addColorStop(0, '#fff3b0'); bar.addColorStop(0.3, '#ff8a1f'); bar.addColorStop(0.6, '#d62a1a');
+      bar.addColorStop(0.85, '#7a1a6b'); bar.addColorStop(1, '#150b30');
+      cx.fillStyle = bar; cx.fillRect(W - 26, 100, 10, 220);
+      cx.fillStyle = '#d7f3f6'; cx.font = '11px "IBM Plex Mono", monospace'; cx.textAlign = 'right';
+      cx.fillText('350', W - 30, 110); cx.fillText('30', W - 30, 318);
+      var yHi = 320 - Math.min(1, Math.max(0, (CFG.tmax - 30)/320))*220, yLo = 320 - Math.min(1, Math.max(0, (CFG.tmin - 30)/320))*220;
+      cx.strokeStyle = '#5fcf8b'; cx.lineWidth = 2; cx.strokeRect(W - 29, yHi - 1, 16, Math.max(6, yLo - yHi) + 2);
+      cx.fillStyle = '#5fcf8b'; cx.font = '11px "IBM Plex Sans KR", sans-serif';
+      cx.fillText('요구조자 ' + CFG.tmin + '~' + CFG.tmax + '°C', W - 34, yHi - 8); cx.textAlign = 'left';
+      var y80 = 320 - (FIRE_T - 30)/320*220;
+      cx.fillStyle = '#ff6a55'; cx.fillRect(W - 29, y80 - 1, 16, 2);
+      cx.font = '11px "IBM Plex Sans KR", sans-serif'; cx.textAlign = 'right';
+      cx.fillText('화재 ' + FIRE_T + '°C', W - 34, y80 + 4); cx.textAlign = 'left';
+      cx.fillStyle = 'rgba(255,255,255,.07)';
+      for (var n = 0; n < 140; n++) cx.fillRect(Math.random()*W, Math.random()*H, 2, 2);
+    }
+    var vg = cx.createRadialGradient(W/2, H/2, H*0.35, W/2, H/2, H*0.85);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)');
+    cx.fillStyle = vg; cx.fillRect(0, 0, W, H);
+  }
+
+  // ---- Gazebo 연결 (rosbridge 웹소켓) ----
+  var CFG = { live:false, ws:'ws://localhost:9090', video:'http://localhost:8080', thermal:'/thermal/image_raw',
+              pose:'/odom', status:'/firedog/status', ox:630, oy:420, scale:61, tmin:30, tmax:42 };
+  try {
+    var saved = JSON.parse(localStorage.getItem('firedog-cfg') || 'null');
+    if (saved) for (var key in saved) if (key !== 'live') CFG[key] = saved[key];
+  } catch (e) {}
+  function band(){ return CFG.tmin + '~' + CFG.tmax + '℃'; }
+
+  var ws = null, retryT = 0;
+  var live = { st:null, pose:null, last:0, t0:0, lastLog:'' };
+  var conn = $('conn-pill');
+  function setConn(cls, txt){
+    if (conn.textContent === txt && conn.className === 'pill ' + cls) return;
+    conn.className = 'pill ' + cls; conn.textContent = txt;
+  }
+  function num(x, d){ return typeof x === 'number' && isFinite(x) ? x : d; }
+  function inBand(tp){ return typeof tp !== 'number' || (tp >= CFG.tmin && tp <= CFG.tmax); }
+
+  // ---- live data: HOLMES control_relay (SSE /events, /map), translated to this page's status fields ----
+  var ROOMS = [['거실', 3.20, 2.55], ['주방', 2.52, 6.28], ['다용도실', 4.80, 6.60], ['욕실', 6.34, 7.12],
+               ['침실1', 8.00, 1.45], ['침실2', 9.07, 6.32], ['복도', 8.00, 3.70], ['현관', 4.17, 0.55]];
+  var mapInfo = null, mapLoading = false, fireMax = null, lastLogT = -1, robot = null;
+  var thermalTimes = [], tcv = document.createElement('canvas'), tcx = tcv.getContext('2d');
+  var LUT = (function(){                          // iron palette
     var stops = [[0,0,0,10],[0.25,80,0,140],[0.5,210,30,40],[0.75,255,160,0],[1,255,255,230]];
     var lut = new Uint8Array(256*3);
     for (var i = 0; i < 256; i++){
@@ -399,143 +1278,636 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     return lut;
   })();
 
-  // ---- map ----
-  function css(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function toPlan(x, y){
-    return [(x - map.origin[0])/map.resolution, map.height - (y - map.origin[1])/map.resolution];
+  function disconnect(){
+    if (ws){ try { ws.close(); } catch (e) {} ws = null; }
+  }
+  function connect(){
+    disconnect(); setConn('warn', '연결 중');
+    try { ws = new EventSource('events'); } catch (e) { setConn('crit', '연결 불가'); return; }
+    ws.onopen = function(){ setConn('ok', 'Gazebo 연결됨'); live.last = performance.now(); };
+    ws.onerror = function(){ if (CFG.live) setConn('crit', '연결 끊김'); };   // EventSource retries by itself
+    function on(kind, fn){ ws.addEventListener(kind, function(ev){ live.last = performance.now(); fn(JSON.parse(ev.data)); }); }
+    on('status', onStatus); on('log', onLog); on('pose', onPose); on('thermal', onThermal); on('hb', function(){});
+  }
+
+  function mapPlan(x, y){
+    return { x:mapInfo.ox + (x - mapInfo.x0)*mapInfo.s, y:mapInfo.oy + (mapInfo.h - (y - mapInfo.y0))*mapInfo.s };
   }
   function loadMap(){
-    if (map || mapLoading) return;
+    if (mapInfo || mapLoading) return;
     mapLoading = true;
     fetch('map').then(function(r){ if (!r.ok) throw r.status; return r.json(); }).then(function(m){
-      var raw = atob(m.data), cv = document.createElement('canvas');
-      cv.width = m.width; cv.height = m.height;
-      var g = cv.getContext('2d'), img = g.createImageData(m.width, m.height);
-      var tmp = document.createElement('canvas').getContext('2d');
-      function rgb(c){ tmp.fillStyle = c; tmp.fillRect(0,0,1,1); return tmp.getImageData(0,0,1,1).data; }
-      var wall = rgb(css('--wall')), room = rgb(css('--room')), out = rgb(css('--floor'));
+      var raw = atob(m.data), mc = document.createElement('canvas');
+      mc.width = m.width; mc.height = m.height;
+      var g = mc.getContext('2d'), img = g.createImageData(m.width, m.height);
+      var cs = getComputedStyle(document.documentElement), tmp = document.createElement('canvas').getContext('2d');
+      function rgb(n){ tmp.fillStyle = cs.getPropertyValue(n).trim(); tmp.fillRect(0, 0, 1, 1); return tmp.getImageData(0, 0, 1, 1).data; }
+      var wall = rgb('--wall'), room = rgb('--room'), out = rgb('--floor');
       for (var i = 0; i < raw.length; i++){
         var v = raw.charCodeAt(i), c = v < 100 ? wall : (v > 250 ? room : out);
         img.data[i*4] = c[0]; img.data[i*4+1] = c[1]; img.data[i*4+2] = c[2]; img.data[i*4+3] = 255;
       }
       g.putImageData(img, 0, 0);
-      map = m;
-      var svg = $('plan');
-      svg.setAttribute('viewBox', '0 0 ' + m.width + ' ' + m.height);
+      var w = m.width*m.resolution, h = m.height*m.resolution, sc = Math.min(680/w, 460/h);
+      mapInfo = { x0:m.origin[0], y0:m.origin[1], h:h, s:sc, ox:(700 - w*sc)/2, oy:(480 - h*sc)/2 };
       var im = $('map-img');
-      im.setAttribute('width', m.width); im.setAttribute('height', m.height);
-      im.setAttribute('href', cv.toDataURL());
-      var lb = $('labels'); lb.innerHTML = '';
+      im.setAttribute('x', mapInfo.ox.toFixed(1)); im.setAttribute('y', mapInfo.oy.toFixed(1));
+      im.setAttribute('width', (w*sc).toFixed(1)); im.setAttribute('height', (h*sc).toFixed(1));
+      im.setAttribute('href', mc.toDataURL());
+      var lb = $('map-labels'); lb.innerHTML = '';
       ROOMS.forEach(function(r){
-        var p = toPlan(r[1], r[2]);
-        var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        t.setAttribute('x', p[0].toFixed(1)); t.setAttribute('y', p[1].toFixed(1)); t.textContent = r[0];
+        var p = mapPlan(r[1], r[2]), t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', p.x.toFixed(1)); t.setAttribute('y', p.y.toFixed(1)); t.textContent = r[0];
         lb.appendChild(t);
       });
-      var px2 = 2/m.resolution, y0 = 6;
-      $('scale').innerHTML = '<line x1="6" y1="' + y0 + '" x2="' + (6+px2) + '" y2="' + y0 + '"/>' +
-        '<text x="' + (9+px2) + '" y="' + (y0+2.5) + '" fill="var(--muted)" stroke="none" font-size="7" font-family="IBM Plex Mono, monospace">2 m</text>';
-      $('plan-tag').textContent = 'house 맵 · ' + (m.width*m.resolution).toFixed(1) + ' × ' + (m.height*m.resolution).toFixed(1) + ' m';
+      if (CFG.live) $('plan-tag').textContent = '단독주택 house 맵 · ' + w.toFixed(1) + ' × ' + h.toFixed(1) + ' m';
     }).catch(function(){}).then(function(){ mapLoading = false; });
   }
-
-  // ---- live data ----
-  function standby(){
-    var off = ['', '대기', '—'];
-    chip('chip-fire', [off[0], '대기', '긴급 상황이 아닙니다'], 'fire-t', 'fire-d');
-    chip('chip-robot', [off[0], '대기', '긴급모드에서만 영상과 위치를 보냅니다'], 'robot-t', 'robot-d');
-    chip('chip-res', off, 'res-t', 'res-d');
-    $('cause').textContent = '대기 중';
-    $('cam-standby').hidden = false; $('plan-standby').hidden = false; $('bot').setAttribute('opacity', 0);
-    $('call-pill').className = 'pill'; $('call-pill').textContent = '대기';
-    $('k-why').textContent = '—'; $('k-call').textContent = '—';
-    $('t-mode').textContent = '대기'; $('t-time').textContent = 'T+00:00';
-    $('hud-temp').textContent = 'MAX — °C'; $('hud-min').textContent = 'MIN — °C';
-    MODS.forEach(function(m){ setMod(m[0], '', '대기'); });
-    var st = $('steps').children;
-    for (var i = 0; i < st.length; i++) st[i].className = 'step';
+  function liveStandby(on){
+    $('map-img').style.display = on ? 'none' : ''; $('map-labels').style.display = on ? 'none' : '';
+    $('plan-wait').style.display = on ? '' : 'none';
+    $('bot').setAttribute('opacity', on ? 0 : 1);
+    if (on){
+      cx.fillStyle = '#05080a'; cx.fillRect(0, 0, W, H);
+      cx.fillStyle = '#8a9aa4'; cx.font = '16px "IBM Plex Sans KR", sans-serif'; cx.textAlign = 'center';
+      cx.fillText('대기 · 긴급모드에서만 열화상 영상을 보냅니다', W/2, H/2); cx.textAlign = 'left';
+    }
+  }
+  function newEmergency(){
+    trail = []; lastTrail = null; trav = 0; fireMax = null; lastLogT = -1;
+    $('log').innerHTML = ''; $('route-done').setAttribute('d', '');
+  }
+  function toPage(s){
+    var alarmOnly = s.fire === 'alarm';
+    var phase = { report:alarmOnly ? 0 : 1, searching:2, guiding:2, to_fire:3,
+                  suppressing:s.fire === 'out' ? 4 : 3, done:5 }[s.stage];
+    var A = {
+      report:      [alarmOnly ? 'alarm' : 'confirm', alarmOnly ? '보호자/거주자에게 확인 요청' : '119 신고 · 보호자/거주자 연락'],
+      searching:   ['search', '열화상으로 36.5℃ 내외 열원 탐색'],
+      guiding:     ['guide', '빔프로젝터 바닥 화살표 · 음성 안내'],
+      to_fire:     ['return', '화재(경보) 위치로 이동'],
+      suppressing: ['spray', '고체 에어로졸 소화장치 방출'],
+      done:        ['result', '보호자/거주자에게 결과 연락']
+    }[s.stage] || ['idle', ''];
+    var verdict = { alarm:'wait', burning:'fire', suppressing:'spray', out:'ok' }[s.fire] || 'wait';
+    var SV = { found:'found', guiding:'escaping', evacuated:'safe', failed:'found' };
+    var d = {
+      phase:phase === undefined ? 0 : phase, action:A[0], detail:A[1], verdict:verdict,
+      fire:fireMax === null ? {} : { max_temp:fireMax },
+      survivors:SV[s.resident] ? [{ state:SV[s.resident] }] : [],
+      laser:s.stage === 'guiding', voice:s.stage === 'guiding',
+      agent:s.fire === 'suppressing' ? 'spraying' : (s.fire === 'out' ? 'used' : 'ready'),
+      moving:s.stage === 'searching' || s.stage === 'guiding' || s.stage === 'to_fire',
+      report:{ state:s.called_119 ? 'done' : 'idle', ack:false }
+    };
+    if (verdict === 'spray') d.verdict_detail = '고체 에어로졸 소화장치 방출 중';
+    if (verdict === 'ok') d.verdict_detail = '고체 에어로졸 방출 완료';
+    return d;
   }
   function onStatus(s){
-    var wasStandby = status.standby;
-    status = s;
-    if (s.standby){ standby(); return; }
-    if (wasStandby){
-      trail = []; trav = 0; last = null;
-      $('route-done').setAttribute('d', ''); $('log').innerHTML = '';
+    if (s.standby){
+      robot = null;
+      live.st = { standby:true, phase:-1, action:'idle', detail:'긴급모드가 아닙니다', verdict:'wait' };
+      liveStandby(true); return;
     }
-    start = Date.now() - (s.elapsed || 0)*1000;
-    loadMap();
-    $('cam-standby').hidden = true; $('plan-standby').hidden = true;
-    $('cause').textContent = s.cause ? CAUSE[s.cause] + '로 접수' : '긴급모드';
-    $('t-mode').textContent = '긴급모드';
-    var idx = -1;
-    STEPS.forEach(function(x, i){ if (x[0] === s.stage) idx = i; });
-    var st = $('steps').children;
-    for (var i = 0; i < st.length; i++) st[i].className = 'step' + (i < idx ? ' done' : (i === idx ? ' now' : ''));
-    if (ROBOT[s.stage]) chip('chip-robot', ROBOT[s.stage], 'robot-t', 'robot-d');
-    if (FIRE[s.fire]) chip('chip-fire', FIRE[s.fire], 'fire-t', 'fire-d');
-    chip('chip-res', RES[s.resident || 'none'], 'res-t', 'res-d');
-    $('k-why').textContent = s.cause ? CAUSE[s.cause] : '—';
-    var cp = $('call-pill');
-    if (s.called_119){ cp.className = 'pill ok'; cp.textContent = '신고함'; $('k-call').textContent = '119 지정 번호로 전화 발신'; }
-    else if (s.cause === 'fire_alarm'){ cp.className = 'pill warn'; cp.textContent = '확인 후 신고'; $('k-call').textContent = '열화상으로 화재를 확인하면 119에 전화'; }
-    else { cp.className = 'pill'; cp.textContent = '대기'; $('k-call').textContent = '—'; }
-    var moving = s.stage === 'searching' || s.stage === 'guiding' || s.stage === 'to_fire';
-    setMod('lidar', 'on', '정상');
-    setMod('drive', moving ? 'act' : 'on', moving ? '이동 중' : '정지');
-    setMod('projector', s.stage === 'guiding' ? 'act' : 'on', s.stage === 'guiding' ? '화살표 표시 중' : '대기');
-    setMod('towel', 'on', '보관 중');
-    setMod('aerosol', s.fire === 'suppressing' ? 'hot' : 'on',
-           s.fire === 'suppressing' ? '방출 중' : (s.fire === 'out' ? '사용함 (1회용)' : '대기'));
+    if (!robot) newEmergency();
+    robot = s;
+    liveStandby(false); loadMap();
+    live.t0 = performance.now() - (s.elapsed || 0)*1000;
+    live.st = toPage(s);
   }
   function onLog(e){
-    var li = document.createElement('li');
-    li.innerHTML = '<time></time><span class="lv ' + e.level + '"></span><span></span>';
-    li.children[0].textContent = 'T+' + mmss(e.t); li.children[0].title = e.clock;
-    li.children[1].textContent = LV[e.level] || e.level; li.children[2].textContent = e.text;
-    var log = $('log'); log.insertBefore(li, log.firstChild);
+    if (e.t <= lastLogT) return;                  // replayed after a reconnect
+    lastLogT = e.t;
+    addLog({ t:e.t, lv:e.level, m:e.text });
   }
   function onPose(p){
-    if (!map) return;
-    var q = toPlan(p.x, p.y);
-    $('bot').setAttribute('opacity', 1);
-    $('bot').setAttribute('transform', 'translate(' + q[0].toFixed(1) + ' ' + q[1].toFixed(1) + ') rotate(' + (-p.yaw*180/Math.PI).toFixed(1) + ')');
-    if (last) trav += Math.hypot(p.x - last.x, p.y - last.y);
-    last = p;
-    $('t-trav').textContent = trav.toFixed(1) + ' m';
-    trail.push(q);
-    var d = ''; for (var i = 0; i < trail.length; i++) d += (i ? ' L' : 'M') + trail[i][0].toFixed(1) + ' ' + trail[i][1].toFixed(1);
-    $('route-done').setAttribute('d', trail.length > 1 ? d : '');
+    live.pose = { x:p.x, y:p.y, deg:90 - p.yaw*180/Math.PI };
   }
-  var cam = $('cam').getContext('2d');
   function onThermal(t){
-    var raw = atob(t.data), img = cam.createImageData(t.w, t.h);
+    var raw = atob(t.data), img = tcx.createImageData(t.w, t.h);
     for (var i = 0; i < raw.length; i++){
       var v = raw.charCodeAt(i)*3;
       img.data[i*4] = LUT[v]; img.data[i*4+1] = LUT[v+1]; img.data[i*4+2] = LUT[v+2]; img.data[i*4+3] = 255;
     }
-    $('cam').width = t.w; $('cam').height = t.h;
-    cam.putImageData(img, 0, 0);
-    $('hud-temp').textContent = 'MAX ' + t.max.toFixed(1) + ' °C';
-    $('hud-min').textContent = 'MIN ' + t.min.toFixed(1) + ' °C';
-    setMod('thermal', t.max >= 80 ? 'hot' : 'on', '최고 ' + Math.round(t.max) + '℃');
-    frames++;
+    tcv.width = t.w; tcv.height = t.h; tcx.putImageData(img, 0, 0);
+    var sc = Math.min(W/t.w, H/t.h), dw = t.w*sc, dh = t.h*sc;
+    cx.fillStyle = '#05080a'; cx.fillRect(0, 0, W, H);
+    cx.imageSmoothingEnabled = false;             // keep the 32x24 pixels visible
+    cx.drawImage(tcv, (W - dw)/2, (H - dh)/2, dw, dh);
+    cx.imageSmoothingEnabled = true;
+    cx.fillStyle = '#d7f3f6'; cx.font = '12px "IBM Plex Mono", monospace'; cx.textAlign = 'right';
+    cx.fillText('MIN ' + t.min.toFixed(1) + ' °C  MAX ' + t.max.toFixed(1) + ' °C', W - 12, H - 52); cx.textAlign = 'left';
+    var now = performance.now(); thermalTimes.push(now);
+    while (thermalTimes.length && now - thermalTimes[0] > 2000) thermalTimes.shift();
+    if (robot && (robot.fire === 'burning' || robot.fire === 'suppressing') && t.max >= FIRE_T){
+      fireMax = fireMax === null ? t.max : Math.max(fireMax, t.max);
+      if (live.st && !live.st.standby) live.st.fire = { max_temp:fireMax };
+    }
   }
 
-  function connect(){
-    var es = new EventSource('events');
-    function on(kind, fn){ es.addEventListener(kind, function(ev){ lastMsg = Date.now(); fn(JSON.parse(ev.data)); }); }
-    on('status', onStatus); on('log', onLog); on('pose', onPose); on('thermal', onThermal); on('hb', function(){});
+  function toPlan(x, y){ if (CFG.live && mapInfo) return mapPlan(x, y); return { x:CFG.ox + x*CFG.scale, y:CFG.oy - y*CFG.scale }; }
+  var ACT = {
+    alarm:['경보 수신','warn','경보 위치 지정 · 관제에 1차 신호'], approach:['경보 위치로 이동','warn','열원 확인을 위해 이동'],
+    confirm:['화재 확인','warn','관제 승인 대기'], search:['요구조자 탐색','warn','열화상 {band} 탐색'],
+    guide:['대피 안내','warn','바닥 투사와 음성 안내'], 'return':['열원 앞으로 이동','warn','탐색 완료'],
+    spray:['방사 중','warn','고체 에어로졸 1회'], measure:['진압 확인','warn','열화상으로 온도 재측정'],
+    result:['결과 보고','ok','관제와 보호자에게 알림'], idle:['대기','ok','재발화 감시']
+  };
+  var VERD = {
+    wait:['verdict','확인 전','경보 위치의 열원 온도를 확인합니다'],
+    scan:['verdict v-judge','열원 확인 중','열화상으로 열원 온도를 측정 중'],
+    fire:['verdict v-no','화재 확인','열원 ' + 80 + '℃ 이상'],
+    ready:['verdict v-judge','방사 준비','방사 범위에 요구조자 없음'],
+    spray:['verdict v-judge','방사 중','고체 에어로졸 1회 방사'],
+    recheck:['verdict v-judge','재측정 중','방사 후 열원 온도 확인'],
+    ok:['verdict v-can','진압 완료','방사 후 ' + 80 + '℃ 미만'],
+    fail:['verdict v-no','진압 실패','방사 후에도 ' + 80 + '℃ 이상']
+  };
+  var NEXT = {
+    wait:'경보 위치로 이동해 열원을 확인합니다', scan:'80℃ 이상이면 화재로 판정합니다', fire:'관제 승인 후 요구조자를 찾아 대피를 안내합니다',
+    ready:'고체 에어로졸을 1회 방사합니다', spray:'방사가 끝나면 열원 온도를 다시 잽니다', recheck:'80℃ 미만이면 진압으로 판정합니다',
+    ok:'결과를 관제와 보호자에게 알립니다', fail:'결과를 관제와 보호자에게 알리고 소방관 도착을 기다립니다'
+  };
+  var CALL = { idle:['','대기'], checking:['info','확인 중'], waiting:['warn','승인 대기'], done:['ok','신고 완료'],
+               dialing:['info','확인 중'], talking:['warn','승인 대기'] };
+  var SVS = { found:'발견', escaping:'대피 중', safe:'대피 완료', stuck:'이동 불가' };
+  var lastTrail = null;
+
+  function updateLive(){
+    var d = live.st || {}, fire = d.fire || {}, svs = d.survivors || [];
+    var now = performance.now(), age = (now - live.last)/1000;
+    var linked = ws && ws.readyState === 1;
+    if (linked) setConn(age > 3 ? 'warn' : 'ok', age > 3 ? '신호 없음 ' + Math.floor(age) + '초' : 'Gazebo 연결됨');
+    $('n-robot').textContent = !linked ? '연결 안 됨' : age > 3 ? '두절 · 마지막 수신 ' + Math.floor(age) + '초 전' : '연결됨';
+    $('t-lat-l').textContent = '마지막 수신';
+    $('t-lat').textContent = linked ? Math.round(age*1000) + ' ms 전' : '—';
+    var tt = Math.floor((now - live.t0)/1000);
+    $('t-time').textContent = 'T+' + mmss(linked && !d.standby ? tt : 0);
+    $('hud-time').textContent = new Date().toTimeString().slice(0, 8);
+    $('hud-fps').textContent = (thermalTimes.length/2).toFixed(1) + ' fps';
+
+    var ph = d.phase | 0, kids = $('steps').children;
+    var failed = d.verdict === 'fail';
+    for (var i = 0; i < kids.length; i++)
+      kids[i].className = 'step' + (failed && i === 4 && ph >= 5 ? ' fail' : i < ph ? ' done' : (i === ph ? ' now' : ''));
+
+    var action = ACT[d.action] ? d.action : 'idle', act = ACT[action];
+    var vk = VERD[d.verdict] ? d.verdict : 'wait';
+    var mx = num(fire.max_temp, 0), hasT = typeof fire.max_temp === 'number';
+    if (d.standby) chip('chip-fire','s-ok','대기','긴급 상황이 아닙니다','fire-t','fire-d');
+    else if (vk === 'ok') chip('chip-fire','s-ok','진압 완료', d.verdict_detail || '열원 ' + Math.round(mx) + '℃ · 80℃ 미만','fire-t','fire-d');
+    else if (vk === 'fail') chip('chip-fire','s-crit','진압 실패','열원 ' + Math.round(mx) + '℃ · 80℃ 이상 · 소방관 대기','fire-t','fire-d');
+    else if (vk === 'spray' || vk === 'recheck') chip('chip-fire','s-warn', vk === 'spray' ? '진압 중' : '진압 확인 중', hasT ? '열원 ' + Math.round(mx) + '℃' : '', 'fire-t','fire-d');
+    else if (vk === 'fire' || vk === 'ready') chip('chip-fire','s-crit','화재 확인','열원 ' + Math.round(mx) + '℃ · 80℃ 이상','fire-t','fire-d');
+    else chip('chip-fire','s-crit', vk === 'scan' ? '열원 확인 중' : '경보 위치 확인 중', '열화상 측정 · 기준 80℃','fire-t','fire-d');
+
+    chip('chip-robot','s-' + act[1], act[0], d.detail || act[2].replace('{band}', band()),'robot-t','robot-d');
+
+    var nF = svs.length, nS = 0, nU = 0, nM = 0;
+    svs.forEach(function(v){ if (v.state === 'safe') nS++; else if (v.state === 'stuck') nU++; else if (v.state === 'escaping') nM++; });
+    if (!nF) chip('chip-res','s-warn','탐색 전','화재 확인 후 탐색을 시작합니다','res-t','res-d');
+    else {
+      var pp0 = []; if (nM) pp0.push('대피 중 ' + nM + '명'); if (nS) pp0.push('대피 완료 ' + nS + '명'); if (nU) pp0.push('이동 불가 ' + nU + '명');
+      chip('chip-res', nF > nS ? 's-crit' : 's-ok', nF + '명 발견', pp0.join(' · '), 'res-t', 'res-d');
+    }
+
+    var v = VERD[vk];
+    $('verdict').className = v[0]; $('v-t').textContent = v[1]; $('v-d').textContent = d.verdict_detail || v[2];
+    $('v-next').textContent = d.next || NEXT[vk];
+    var bf = typeof d.before === 'number' ? d.before : null, af = typeof d.after === 'number' ? d.after : null;
+    if (hasT){ $('v-p').textContent = Math.round(mx) + '℃'; $('v-p').style.color = mx >= 80 ? 'var(--crit)' : 'var(--ok)'; }
+    else { $('v-p').textContent = '—'; $('v-p').style.color = ''; }
+    if (bf === null){ $('m-before').textContent = '—'; $('f-before').style.width = '0'; }
+    else { $('m-before').textContent = Math.round(bf) + '℃'; $('f-before').style.width = Math.min(100, bf/400*100) + '%'; $('f-before').style.background = 'var(--crit)'; }
+    if (af === null){ $('m-after').textContent = '—'; $('f-after').style.width = '0'; }
+    else {
+      var fin = vk === 'ok' || vk === 'fail';
+      $('m-after').textContent = Math.round(af) + '℃' + (fin ? '' : ' (측정 중)');
+      $('f-after').style.width = Math.min(100, af/400*100) + '%';
+      $('f-after').style.background = !fin ? 'var(--warn)' : af >= 80 ? 'var(--crit)' : 'var(--ok)';
+    }
+
+    $('sv-n').textContent = nF + '명';
+    ['sv-1','sv-2'].forEach(function(id, k){
+      var x = svs[k];
+      $(id).textContent = !x ? '—' : (x.room ? x.room + ' · ' : '') + SVS[x.state] + (typeof x.temp === 'number' ? ' · 체표 ' + f1(x.temp) + '℃' : '');
+    });
+    var svp = $('sv-pill');
+    svp.className = !nF ? 'pill' : nF > nS ? 'pill crit' : 'pill ok';
+    svp.textContent = !nF ? '탐색 전' : nF + '명 발견' + (nU ? ' · 이동 불가 ' + nU : '');
+
+    var rp = d.report || {}, cs = CALL[rp.state] || CALL.idle;
+    $('call-pill').className = 'pill ' + cs[0]; $('call-pill').textContent = cs[1];
+    $('k-appr').textContent = rp.state === 'done' ? '승인 완료' : rp.state === 'waiting' ? '관제 요원 확인 대기' : '—';
+    $('k-call').textContent = rp.state === 'done' ? '119 신고 이벤트 기록 · 전달 완료' : '관제 승인 후 전달';
+    $('k-ack').textContent = rp.ack ? '119 상황실 접수 확인' : '—';
+
+    var bat = num(d.battery, null);
+    $('t-bat').textContent = bat === null ? '—' : Math.round(bat) + '%'; $('b-bat').style.width = (bat || 0) + '%';
+    $('hud-temp').textContent = 'MAX ' + f1(mx) + ' °C';
+    $('hud-obj').textContent = '요구조자 후보 ' + (d.detections ? d.detections.length : 0) + '명';
+    setMod('lidar', 'on', '정상');
+    setMod('heat', mx > 150 ? 'hot' : 'on', '최고 ' + Math.round(mx) + '℃');
+    setMod('thermal', 'act', '요구조자 ' + band());
+    setMod('drive', d.moving ? 'act' : 'on', d.moving ? '이동 중' : '정지');
+    setMod('laser', d.laser ? 'act' : 'on', d.laser ? '경로 표시 중' : '대기');
+    setMod('voice', d.voice ? 'act' : 'on', d.voice ? '안내 중' : '대기');
+    var ag = d.agent || 'ready';
+    setMod('agent', ag === 'ready' ? 'on' : ag === 'spraying' ? 'act' : '', ag === 'ready' ? '장전됨 (1회용)' : ag === 'spraying' ? '방사 중' : '사용 완료');
+
+    // 도면
+    if (live.pose){
+      var pp = toPlan(live.pose.x, live.pose.y);
+      if (lastTrail){ var dd = Math.hypot(pp.x - lastTrail.x, pp.y - lastTrail.y); if (dd < 200) trav += dd; }
+      if (!lastTrail || Math.hypot(pp.x - lastTrail.x, pp.y - lastTrail.y) > 5){
+        trail.push(pp); lastTrail = pp;
+        var ds = ''; for (var k = 0; k < trail.length; k++) ds += (k ? ' L' : 'M') + trail[k].x.toFixed(1) + ' ' + trail[k].y.toFixed(1);
+        $('route-done').setAttribute('d', trail.length > 1 ? ds : '');
+      }
+      $('bot').setAttribute('transform', 'translate(' + pp.x.toFixed(1) + ' ' + pp.y.toFixed(1) + ')');
+      $('bot-dir').setAttribute('transform', 'rotate(' + live.pose.deg.toFixed(1) + ')');
+    }
+    $('t-trav').textContent = f1(trav/(mapInfo ? mapInfo.s : CFG.scale)) + ' m';
+    var fc = vk === 'ok' ? 0.05 : Math.min(1.4, 0.2 + mx/260);
+    if (typeof fire.x === 'number'){
+      var fp = toPlan(fire.x, fire.y);
+      $('heat-c').setAttribute('cx', fp.x); $('heat-c').setAttribute('cy', fp.y);
+      $('fire-c').setAttribute('cx', fp.x); $('fire-c').setAttribute('cy', fp.y);
+    }
+    $('heat-c').setAttribute('r', (38 + 52*fc).toFixed(1));
+    $('heat-c').style.opacity = typeof fire.x !== 'number' ? '0' : (hasT ? Math.min(1, 0.12 + 0.85*fc) : 0.2).toFixed(2);
+    $('fire-c').style.opacity = typeof fire.x !== 'number' ? 0 : 1;
+    $('fire-c').setAttribute('r', (3 + 6*fc).toFixed(1));
+    [['res', svs[0], 'res-lbl', '요구조자 1'], ['res2', svs[1], 'res2-lbl', '요구조자 2']].forEach(function(m){
+      var g = $(m[0]), x = m[1];
+      if (!x || typeof x.x !== 'number'){ g.setAttribute('opacity', 0); return; }
+      var sp = toPlan(x.x, x.y), col = x.state === 'safe' ? 'var(--ok)' : x.state === 'escaping' ? 'var(--warn)' : 'var(--crit)';
+      g.setAttribute('transform', 'translate(' + sp.x.toFixed(1) + ' ' + sp.y.toFixed(1) + ')');
+      g.setAttribute('opacity', 1);
+      g.firstElementChild.style.fill = col; $(m[2]).style.fill = col;
+      $(m[2]).textContent = m[3] + (x.state === 'stuck' ? ' · 이동 불가' : '');
+    });
+    var ep = d.escape_path;
+    if (ep && ep.length > 1){
+      var ls = ''; for (var q = 0; q < ep.length; q++){ var e2 = toPlan(ep[q][0], ep[q][1]); ls += (q ? ' L' : 'M') + e2.x.toFixed(1) + ' ' + e2.y.toFixed(1); }
+      $('laser').setAttribute('d', ls);
+      $('laser').setAttribute('opacity', d.laser ? 0.95 : 0.25);
+    } else $('laser').setAttribute('opacity', 0);
   }
-  setInterval(function(){
-    var up = Date.now() - lastMsg < 5000;
-    $('n-robot').textContent = up ? '연결됨' : '연결 끊김';
-    var now = new Date();
-    $('hud-time').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-    $('hud-fps').textContent = frames + ' fps'; frames = 0;
-    if (!status.standby) $('t-time').textContent = 'T+' + mmss((Date.now() - start)/1000);
-  }, 1000);
-  standby();
-  connect();
+
+  // 영상 위 탐지 상자 (열화상 온도가 설정 대역 안이면 요구조자, 밖이면 고온)
+  var ov = $('ov'), octx = ov.getContext('2d'), simg = $('stream');
+  function drawOverlay(){
+    if (simg.naturalWidth && (ov.width !== simg.naturalWidth || ov.height !== simg.naturalHeight)){
+      ov.width = simg.naturalWidth; ov.height = simg.naturalHeight;
+    }
+    var w = ov.width, h = ov.height, fs = Math.max(12, Math.round(w/55));
+    octx.clearRect(0, 0, w, h);
+    var dets = live.st && live.st.detections; if (!dets) return;
+    octx.font = '500 ' + fs + 'px "IBM Plex Sans KR", sans-serif'; octx.lineWidth = Math.max(2, w/400);
+    dets.forEach(function(b){
+      var ok = inBand(b.temp), col = ok ? '#5fcf8b' : '#ff6a55';
+      var x = b.x*w, y = b.y*h, bw = b.w*w, bh = b.h*h;
+      var label = (ok ? '요구조자 ' : '고온 ') + (typeof b.temp === 'number' ? f1(b.temp) + '°C' : '') + (ok ? '' : ' · 대역 밖');
+      octx.strokeStyle = col; octx.strokeRect(x, y, bw, bh);
+      var tw = octx.measureText(label).width + 10, ly = Math.max(fs + 6, y);
+      octx.fillStyle = col; octx.fillRect(x - 1, ly - fs - 6, tw, fs + 6);
+      octx.fillStyle = '#05080a'; octx.fillText(label, x + 4, ly - 6);
+    });
+  }
+
+  // 설정 화면
+  var FS = ['ws','video','thermal','pose','status'], NS = ['ox','oy','scale','tmin','tmax'];
+  function fillForm(){
+    FS.forEach(function(k){ $('c-' + k).value = CFG[k]; });
+    NS.forEach(function(k){ $('c-' + k).value = CFG[k]; });
+  }
+  function readForm(){
+    FS.forEach(function(k){ var v = $('c-' + k).value.trim(); if (v) CFG[k] = v; });
+    NS.forEach(function(k){ var v = parseFloat($('c-' + k).value); if (!isNaN(v)) CFG[k] = v; });
+    if (CFG.scale <= 0) CFG.scale = 61;
+    if (CFG.tmin > CFG.tmax){ var tmp = CFG.tmin; CFG.tmin = CFG.tmax; CFG.tmax = tmp; }
+    fillForm();
+    try { localStorage.setItem('firedog-cfg', JSON.stringify(CFG)); } catch (e) {}
+  }
+  function setLive(on){
+    CFG.live = on;
+    $('c-demo').setAttribute('aria-pressed', !on); $('c-gz').setAttribute('aria-pressed', on);
+    $('cam').hidden = false; $('stream').hidden = true; $('ov').hidden = true;
+    $('cfg-box').hidden = on; $('srch-route').style.opacity = on ? 0 : 1;
+    $('plan-demo').style.display = $('plan-demo2').style.display = on ? 'none' : '';
+    $('plan-tag').textContent = '단독주택 1층 · 약 72㎡ · 1m = 61px';
+    if (!on){ $('map-img').style.display = $('map-labels').style.display = $('plan-wait').style.display = 'none'; $('bot').setAttribute('opacity', 1); }
+    ['sc-toggle','b-play','b-speed'].forEach(function(id){ $(id).disabled = on; });
+    $('cfg-state').textContent = on ? 'Gazebo 데이터 사용 중' : '시연 데이터 사용 중';
+    $('hud-src').textContent = on ? 'GAZEBO' : '시연 데이터';
+    if (on) $('ex-note').hidden = true;
+    $('route').style.opacity = on ? 0 : 1;
+    $('t-lat-l').textContent = '통신 지연';
+    live.st = null; live.pose = null; live.lastLog = ''; live.lastSms = ''; lastTrail = null; smsReset();
+    $('laser').setAttribute('d', 'M285 305 L330 320 L410 320 L460 330 L460 400 L560 400 L630 435');
+    $('heat-c').setAttribute('cx', 591); $('heat-c').setAttribute('cy', 55);
+    $('fire-c').setAttribute('cx', 591); $('fire-c').setAttribute('cy', 55);
+    if (on){ reset(); trail = []; robot = null; liveStandby(true); connect(); }
+    else {
+      disconnect(); $('stream').removeAttribute('src'); octx.clearRect(0, 0, ov.width, ov.height);
+      setConn('', '시연 데이터'); $('hud-fps').textContent = '15 fps'; setScenario(sc);
+    }
+  }
+  function initCfg(){
+    fillForm(); setConn('', '시연 데이터');
+    $('c-apply').addEventListener('click', function(){
+      readForm();
+      $('c-msg').textContent = '적용했습니다';
+      if (CFG.live){ reset(); connect(); }
+    });
+    $('c-demo').addEventListener('click', function(){ if (CFG.live) setLive(false); });
+    $('c-gz').addEventListener('click', function(){
+      readForm();
+      if (!CFG.live) setLive(true); else { reset(); connect(); }
+    });
+  }
+
+  // ---- 소방서 상황실 (임시 시연) ----
+  var STATION_NAME = '○○소방서 (시연용)';          // 화면에 표시되는 이름만 바꾸면 됩니다
+  var inc = null, pending = [], seq = 412, records = [], selId = null, curView = 'situation';
+  var closedLock = false, disp = null, lastSig = '', unitEls = [];
+  var UNITS = [['펌프차 1', 300], ['구급차 1', 240]];        // 예상 소요(가상 초)
+  var VIEWS = ['situation', 'records', 'control'];
+  var STAGE = { 'new':['crit','신규 신고 · 접수 대기'], ack:['warn','접수 확인'], dispatched:['info','출동 중'], arrived:['ok','현장 도착'] };
+  var SEEDS = [
+    { id:'INC-0410', at:'10-29 02:41', verdict:'진압 실패', result:'진압 실패 · 소방관 인계', surv:'2명 발견', dur:'01:20', seed:true, events:[
+      { c:'02:41:03', lv:'crit', src:'HOLMES', m:'주방 경보기 신호 수신. 경보 위치를 주방으로 지정' },
+      { c:'02:41:15', lv:'crit', src:'HOLMES', m:'화재 확인. 열원 298℃로 기준 80℃ 이상' },
+      { c:'02:41:30', lv:'crit', src:'HOLMES', m:'거실에서 요구조자 발견. 누적 1명' },
+      { c:'02:41:46', lv:'crit', src:'HOLMES', m:'이동 불가 요구조자: 안방. 위치 전달' },
+      { c:'02:42:15', lv:'crit', src:'HOLMES', m:'진압 실패. 방사 후에도 열원 151℃' },
+      { c:'02:42:23', lv:'info', src:'HOLMES', m:'현장 대기. 소방관 인계 대기' } ] },
+    { id:'INC-0409', at:'10-28 21:14', verdict:'진압 완료', result:'진압 완료 · 복귀', surv:'1명 발견', dur:'01:26', seed:true, events:[
+      { c:'21:14:02', lv:'crit', src:'HOLMES', m:'주방 경보기 신호 수신. 경보 위치를 주방으로 지정' },
+      { c:'21:14:14', lv:'crit', src:'HOLMES', m:'화재 확인. 열원 305℃로 기준 80℃ 이상' },
+      { c:'21:14:40', lv:'ok',   src:'HOLMES', m:'거실 요구조자 현관 도착. 대피 완료' },
+      { c:'21:15:14', lv:'ok',   src:'HOLMES', m:'진압 완료. 방사 후 열원 58℃' } ] }
+  ];
+
+  function pad4(n){ return ('000' + n).slice(-4); }
+  function clock(){ return new Date().toTimeString().slice(0, 8); }
+  function stamp(){ var d = new Date(); return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + clock(); }
+  function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function setText(id, txt){ var e = $(id); if (e.textContent !== txt) e.textContent = txt; }
+  function setPill(node, cls, txt){
+    var c = 'pill ' + cls; if (node.className !== c) node.className = c;
+    if (node.textContent !== txt) node.textContent = txt;
+  }
+
+  function showView(){
+    var h = (location.hash || '').slice(1); if (VIEWS.indexOf(h) < 0) h = 'situation';
+    curView = h;
+    VIEWS.forEach(function(v){
+      $('view-' + v).hidden = v !== h;
+      var a = $('nav-' + v); a.className = v === h ? 'on' : '';
+      if (v === h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    updateBadge();
+    if (h === 'records') renderDetail(true);
+  }
+  function updateBadge(){
+    $('nav-badge').hidden = !(inc && inc.stage === 'new' && curView !== 'situation');
+  }
+
+  function liFor(e){
+    var li = el('li'); li.appendChild(el('time', '', e.c)); li.appendChild(el('span', 'lv ' + e.lv, LV[e.lv]));
+    var s = el('span'); s.appendChild(el('b', 'src', e.src)); s.appendChild(document.createTextNode(' ' + e.m)); li.appendChild(s);
+    return li;
+  }
+  function feedEmpty(){ var f = $('feed'); f.innerHTML = ''; f.appendChild(el('li', 'empty', '접수된 알림이 없습니다.')); }
+  function feedAdd(e){
+    var f = $('feed'), emp = f.querySelector('.empty'); if (emp) emp.remove();
+    f.insertBefore(liFor(e), f.firstChild);
+    while (f.children.length > 60) f.lastChild.remove();
+  }
+  function stationLog(ev){
+    var e = { c:clock(), lv:ev.lv, src:'HOLMES', m:ev.m.replace('{band}', band()) };
+    if (!inc){ pending.push(e); return; }
+    inc.events.push(e); feedAdd(e);
+  }
+  function note(lv, m){
+    var e = { c:clock(), lv:lv, src:'상황실', m:m };
+    inc.events.push(e); feedAdd(e);
+  }
+
+  function viewIncident(){
+    $('inc-empty').hidden = !!inc; $('inc-body').hidden = !inc;
+    if (!inc){ setPill($('inc-pill'), '', '대기'); setText('inc-id', ''); }
+    updateBadge(); updateUnits(); updateCurRow(); renderAlert();
+  }
+  function openIncident(){
+    inc = { id:'INC-' + pad4(seq++), at:stamp(), stage:'new', events:[], t0:performance.now(), archived:false };
+    setText('inc-id', inc.id); setText('inc-time', inc.at);
+    pending.forEach(function(e){ inc.events.push(e); feedAdd(e); }); pending = [];
+    note('crit', '관제 승인을 거쳐 119 신고가 전달되었습니다. 접수 확인이 필요합니다');
+    viewIncident(); renderStage();
+  }
+  var etaMin = 0;
+  function renderAlert(){
+    var a = $('alert-bar'), cls = 'a-idle', title = '대기 중', text = '접수된 신고가 없습니다. HOLMES가 화재를 감지해 신고하면 이곳에 표시됩니다.', btn = '', link = false;
+    if (inc){
+      link = true;
+      if (inc.stage === 'new'){ cls = 'a-new'; title = '신규 신고 접수'; text = '○○ 단독주택단지 ○○길 12-7 · 주방 화재 확인 · 접수 확인이 필요합니다'; btn = '접수 확인'; }
+      else if (inc.stage === 'ack'){ cls = 'a-ack'; title = '접수 확인 완료'; text = '출동대를 현장으로 보내세요. 출동 지시를 내리면 출동 현황에 반영됩니다'; btn = '출동 지시'; }
+      else if (inc.stage === 'dispatched'){ cls = 'a-run'; title = '출동 중'; text = '가장 빠른 출동대 도착까지 ' + mmss(etaMin) + ' · 관제 화면에서 현장을 볼 수 있습니다'; }
+      else { cls = 'a-done'; title = '출동대 현장 도착'; text = '사건을 종료하기 전까지 관제 화면에서 현장을 확인할 수 있습니다'; }
+    }
+    var c = 'alertbar ' + cls; if (a.className !== c) a.className = c;
+    setText('al-t', title); setText('al-d', text);
+    $('b-next').hidden = !btn; if (btn) setText('b-next', btn);
+    $('b-ctl').hidden = !link;
+  }
+  function renderStage(){
+    if (inc){ var s = STAGE[inc.stage]; setPill($('inc-pill'), s[0], s[1]); }
+    updateBadge(); renderAlert();
+  }
+  function briefText(){
+    var ft = $('fire-t').textContent, rt = $('res-t').textContent, rd = $('res-d').textContent;
+    if (ft === '진압 완료') return 'HOLMES가 방사 후 열원이 80℃ 미만으로 내려간 것을 확인했습니다. 안방에 이동 불가 요구조자가 있으니 도착하면 먼저 확인하세요.';
+    if (ft === '진압 실패') return '방사 후에도 열원이 80℃ 이상입니다. 안방에 이동 불가 요구조자가 있으니 도착하면 안방 위치를 먼저 확인하세요.';
+    if (ft === '진압 중' || ft === '진압 확인 중') return 'HOLMES가 고체 에어로졸을 방사했고 열원 온도를 다시 재고 있습니다. 요구조자 상황: ' + rt + (rd ? ' · ' + rd : '') + '.';
+    if (/명 발견/.test(rt)) return 'HOLMES가 요구조자를 찾아 대피를 안내하고 있습니다. ' + rt + (rd ? ' · ' + rd : '') + '. 대피가 끝나면 열원 앞에서 방사합니다.';
+    return 'HOLMES가 화재를 확인했고 집 안 요구조자를 탐색할 준비를 하고 있습니다.';
+  }
+
+  function updateUnits(){
+    var now = performance.now(), allDone = !!(inc && disp), minRem = Infinity;
+    UNITS.forEach(function(u, i){
+      var r = unitEls[i], pct = 0, st = ['', '대기'], eta = '—';
+      if (inc && disp){
+        var rem = Math.max(0, u[1] - (now - disp.t0)/100);
+        pct = 100*(1 - rem/u[1]);
+        if (rem > 0){ st = ['info', '출동 중']; eta = '도착까지 ' + mmss(rem); allDone = false; minRem = Math.min(minRem, rem); }
+        else { st = ['ok', '현장 도착']; eta = '도착'; }
+      }
+      r.bar.style.width = pct.toFixed(1) + '%';
+      setPill(r.pill, st[0], st[1]);
+      if (r.eta.textContent !== eta) r.eta.textContent = eta;
+    });
+    etaMin = isFinite(minRem) ? minRem : 0;
+    if (inc && disp && allDone && !disp.arrived){
+      disp.arrived = true; inc.stage = 'arrived'; note('ok', '출동대가 현장에 도착했습니다'); renderStage();
+    }
+  }
+
+  function findRec(id){
+    if (inc && inc.id === id) return inc;
+    for (var i = 0; i < records.length; i++) if (records[i].id === id) return records[i];
+    return null;
+  }
+  function renderRecords(){
+    var b = $('rec-body'); b.innerHTML = '';
+    records.forEach(function(r){
+      var tr = el('tr', r.id === selId ? 'sel' : ''), td = el('td');
+      var bt = el('button', 'rowbtn', r.id); bt.type = 'button'; bt.setAttribute('data-id', r.id); td.appendChild(bt); tr.appendChild(td);
+      [r.at, r.verdict, r.result, r.surv, r.dur].forEach(function(x, k){ tr.appendChild(el('td', k === 0 || k === 4 ? 'mono' : '', x)); });
+      var tk = el('td'); tk.appendChild(el('span', r.seed ? 'pill' : 'pill info', r.seed ? '예시' : '시연')); tr.appendChild(tk);
+      b.appendChild(tr);
+    });
+    $('rc-row').className = inc && inc.id === selId ? 'sel' : '';
+  }
+  function updateCurRow(){
+    var tb = $('rec-cur-body');
+    if (!inc){ tb.hidden = true; return; }
+    tb.hidden = false;
+    setText('rc-id', inc.id); $('rc-id').setAttribute('data-id', inc.id);
+    setText('rc-at', inc.at); setText('rc-verdict', $('v-t').textContent);
+    setText('rc-res', $('res-t').textContent); setText('rc-dur', mmss((performance.now() - inc.t0)/1000));
+    $('rc-row').className = inc.id === selId ? 'sel' : '';
+  }
+  function renderDetail(force){
+    var r = selId && findRec(selId);
+    if (!r){ $('rec-empty').hidden = false; $('rec-det').hidden = true; setText('rd-title', ''); return; }
+    $('rec-empty').hidden = true; $('rec-det').hidden = false;
+    var cur = inc && r === inc;
+    setText('rd-title', r.id + (r.seed ? ' (예시)' : ''));
+    setText('rd-sum', cur ? '진행 중 · 접수 ' + r.at + ' · 진압 결과 ' + $('v-t').textContent
+      : '접수 ' + r.at + ' · 진압 결과 ' + r.verdict + ' · 결과 ' + r.result + ' · 요구조자 ' + r.surv + ' · 소요 ' + r.dur);
+    var sig = r.id + ':' + r.events.length;
+    if (!force && sig === lastSig) return;
+    lastSig = sig;
+    var l = $('rd-log'); l.innerHTML = '';
+    r.events.slice().reverse().forEach(function(e){ l.appendChild(liFor(e)); });
+  }
+  function selectRec(id){ selId = id; lastSig = ''; renderRecords(); renderDetail(true); }
+
+  function stationArchive(durSec){
+    if (!inc || inc.archived) return;
+    inc.archived = true;
+    records.unshift({ id:inc.id, at:inc.at, verdict:$('v-t').textContent,
+      result:$('fire-t').textContent + ' · ' + $('robot-t').textContent, surv:$('res-t').textContent,
+      dur:mmss(durSec), events:inc.events.slice(), seed:false });
+    if (records.length > 14) records.pop();
+    renderRecords();
+  }
+  function stationReset(){
+    if (inc && !inc.archived) seq--;
+    inc = null; pending = []; disp = null; lastSig = '';
+    feedEmpty(); viewIncident(); renderRecords();
+    if (selId) renderDetail(true);
+  }
+  function mirrorTiles(){
+    [['chip-fire','sf-fire','fire'],['chip-robot','sf-robot','robot'],['chip-res','sf-res','res']].forEach(function(m){
+      var c = $(m[0]).className; if ($(m[1]).className !== c) $(m[1]).className = c;
+      setText(m[1] + '-t', $(m[2] + '-t').textContent); setText(m[1] + '-d', $(m[2] + '-d').textContent);
+    });
+  }
+  function stationSync(){
+    var calling = $('call-pill').textContent === '신고 완료';
+    if (!calling) closedLock = false;
+    if (!inc && calling && !closedLock) openIncident();
+    if (!inc) return;
+    mirrorTiles();
+    var vp = $('v-p').textContent;
+    setText('inc-verdict', $('v-t').textContent + (vp !== '—' ? ' (열원 ' + vp + ')' : ''));
+    setText('inc-brief', briefText());
+    updateUnits(); renderStage(); updateCurRow();
+    if (curView === 'records' && selId === inc.id) renderDetail(false);
+  }
+
+  (function initStation(){
+    $('st-name').textContent = STATION_NAME;
+    UNITS.forEach(function(u){
+      var li = el('li'), bar = el('span', 'bar'), fill = el('i'), ue = el('span', 'ue'), pill = el('span', 'pill', '대기'), eta = el('span', 'eta', '—');
+      fill.style.width = '0%'; bar.appendChild(fill); ue.appendChild(pill); ue.appendChild(eta);
+      li.appendChild(el('span', '', u[0])); li.appendChild(bar); li.appendChild(ue);
+      $('units').appendChild(li); unitEls.push({ bar:fill, pill:pill, eta:eta });
+    });
+    records = SEEDS.slice();
+    $('b-next').addEventListener('click', function(){
+      if (!inc) return;
+      if (inc.stage === 'new'){ inc.stage = 'ack'; note('ok', '접수를 확인했습니다'); renderStage(); }
+      else if (inc.stage === 'ack'){
+        inc.stage = 'dispatched'; disp = { t0:performance.now(), arrived:false };
+        note('info', '출동을 지시했습니다. 펌프차 1대, 구급차 1대'); renderStage();
+      }
+    });
+    $('b-close').addEventListener('click', function(){
+      if (!inc) return;
+      stationArchive((performance.now() - inc.t0)/1000); closedLock = true; stationReset();
+    });
+    $('view-records').addEventListener('click', function(ev){
+      var b = ev.target.closest && ev.target.closest('.rowbtn');
+      if (b) selectRec(b.getAttribute('data-id'));
+    });
+    window.addEventListener('hashchange', showView);
+    function tick(){
+      var d = new Date();
+      $('st-clock').textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + clock();
+    }
+    tick(); setInterval(tick, 1000);
+    feedEmpty(); renderRecords(); viewIncident(); showView();
+  })();
+
+  // ---- 제어 ----
+  function reset(){
+    t = 0; evIdx = 0; lastSec = -1; trail = []; trailLast = null; trav = 0; lastPos = null; lastTrail = null;
+    $('log').innerHTML = ''; $('route-done').setAttribute('d', ''); buildSteps(); smsReset(); stationReset();
+  }
+  function setScenario(k){
+    sc = k;
+    $('sc-toggle').setAttribute('aria-checked', k === 'B');
+    $('ex-note').hidden = CFG.live || k !== 'B';
+    if (!CFG.live) $('hud-src').textContent = k === 'B' ? '진압 실패 예시' : '시연 데이터';
+    reset();
+  }
+  $('sc-toggle').addEventListener('click', function(){ if (!CFG.live) setScenario(sc === 'A' ? 'B' : 'A'); });
+  $('b-reset').addEventListener('click', reset);
+  $('b-play').addEventListener('click', function(){
+    playing = !playing; this.textContent = playing ? '일시정지' : '재생';
+  });
+  $('b-speed').addEventListener('click', function(){
+    speed = speed === 1 ? 3 : 1; this.textContent = '속도 ' + speed + '×';
+  });
+
+  var lastSt = 0;
+  function frame(now){
+    var dt = Math.min(0.1, (now - last)/1000); last = now;
+    if (CFG.live){
+      updateLive(); drawOverlay();
+    } else {
+      if (playing){
+        t += dt*speed;
+        if (t >= TL[sc].end){ stationArchive(TL[sc].end - 1.5); reset(); }
+      }
+      var s = simulate(t, sc);
+      update(s);
+      if (now - lastDraw > 48){ lastDraw = now; draw(s, now/1000); frames++; }
+      if (now - fpsT > 1000){ $('hud-fps').textContent = frames + ' fps'; frames = 0; fpsT = now; }
+    }
+    if (now - lastSt > 200){ lastSt = now; stationSync(); }
+    requestAnimationFrame(frame);
+  }
+  initCfg();
+  setScenario('A');
+  if (/^https?:$/.test(location.protocol)) setLive(true);
+  requestAnimationFrame(frame);
 })();
 </script>
